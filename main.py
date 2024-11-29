@@ -51,7 +51,7 @@ parser.add_argument('-e', '--export_dir_path', help='要扫描的目录，相对
 parser.add_argument('-c', '--copy_meta_file', type=int, help='是否复制元数据，可选值：0, 1')
 args, unknown = parser.parse_known_args()
 if args.copy_meta_file != None:
-    copy_meta_file = bool(args.copy_meta_file)
+    copy_meta_file = args.copy_meta_file
 if args.export_dir_path != None:
     export_dir_path = args.export_dir_path
 
@@ -80,7 +80,7 @@ def work():
                 item['path'] = os.path.join(parent['path'], item['name'])
         item['create'] = False
         path_index[item['key']] = item
-        if i == 1 or parent['name'] is '':
+        if i == 1 or parent['name'] == '':
             continue
         if parent['create'] is False:
             # 处理父级，创建目录
