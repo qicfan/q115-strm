@@ -1,0 +1,6 @@
+{
+    "cloud_mount_root_dir": "/vol1/1000/docker/clouddrive2/shared/115",
+    "strm_root_dir": "/vol1/1000/视频/网盘/115",
+    "strm_ext": [".mkv", ".mp4", ".ts", ".avi", ".mov", ".mpeg", ".mpg", ".wmv", ".3gp", ".m4v", ".flv", ".m2ts", ".f4v", ".tp", "mp3", ".wav", ".flac", ".aac"],
+    "meta_ext": [".jpg", ".jpeg", ".png", ".webp", ".nfo", ".srt", ".ass", ".svg", ".sup"]
+}
