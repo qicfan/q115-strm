@@ -14,6 +14,9 @@ poetry install
 - strm_root_dir: 115网盘挂在根目录对应的strm文件存放目录，例如：/vol2/1000/网盘/115
 - strm_ext: 要生成strm文件的扩展名
 - meta_ext: 元数据扩展名
+### Cookie
+需要通过各种方法获取cookie，然后写入./15-cookies.txt文件中
+获取cookie的方法请自行搜索
 ## 执行脚本
 ```console
 python3 main.py -e=要生成目录树的目录 -c=是否复制元文件到strm目录
