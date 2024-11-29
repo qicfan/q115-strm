@@ -47,8 +47,8 @@ with open(config_file, mode='r', encoding='utf-8') as fd_config:
     config = json.load(fd_config)
 
 parser = argparse.ArgumentParser(prog='115-STRM', description='将挂载的115网盘目录生成STRM', formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument('-e', '--export_dir_path', help='要扫描的目录，相对路径，留空则表示从根目录开始处理')
-parser.add_argument('-c', '--copy_meta_file', type=int, help='是否复制元数据，可选值：0, 1')
+parser.add_argument('-e', '--export_dir_path', help='要生成目录树的路径，相对路径，不能为空')
+parser.add_argument('-c', '--copy_meta_file', type=int, help='是否复制元数据，可选值：0, 1，0-不复制，1-复制')
 args, unknown = parser.parse_known_args()
 if args.copy_meta_file != None:
     copy_meta_file = args.copy_meta_file
@@ -66,8 +66,12 @@ def work():
     i = 0
     path_index = {}
     copy_list = []
-    cloud_base_dir = os.path.join(config['cloud_mount_root_dir'], export_dir_path)
-    strm_base_dir = os.path.join(config['strm_root_dir'], export_dir_path)
+    ed = export_dir_path.split('/')
+    edr = os.sep.join(ed)
+    cloud_base_dir = os.path.join(config['cloud_mount_root_dir'], edr)
+    strm_base_dir = os.path.join(config['strm_root_dir'], edr)
+    if not os.path.exists(strm_base_dir): 
+        os.makedirs(strm_base_dir)
     for item in it:
         i += 1
         parent = path_index.get(item['parent_key'])
