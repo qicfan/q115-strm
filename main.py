@@ -107,7 +107,7 @@ def work():
                 logger.info('文件 - 生成strm：{0} \n {1}'.format(strm_file, e))
         if ext in config['meta_ext']:
             copy_list.append(item['path'])
-    c = 0
+    c = 1
     t = len(copy_list)
     for copy_item in copy_list:
         src_file = os.path.join(cloud_base_dir, copy_item)
@@ -117,6 +117,7 @@ def work():
             logger.info('[%d / %d] 元数据 - 已复制：%s' % (c, t, copy_item))
         except OSError:
             pass
+        c += 1
         time.sleep(1)
 
 if __name__ == '__main__':
