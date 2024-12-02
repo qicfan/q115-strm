@@ -116,6 +116,8 @@ def work():
     for copy_item in copy_list:
         src_file = os.path.join(cloud_base_dir, copy_item)
         dest_file = os.path.join(strm_base_dir, copy_item)
+        if os.path.exists(dest_file):
+            continue;
         try:
             shutil.copy(src_file, dest_file)
             logger.info('[%d / %d] 元数据 - 已复制：%s' % (c, t, copy_item))
