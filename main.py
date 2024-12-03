@@ -28,7 +28,7 @@ if os.path.exists(real_log_file):
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
 file_handler = logging.FileHandler(filename=get_real_path('tree.log'), mode='a', encoding='utf-8')
-file_handler.setLevel(logging.INFO)
+file_handler.setLevel(logging.ERROR)
 file_handler.setFormatter(DetailedFormatter())
 root_logger.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
@@ -108,22 +108,27 @@ def work():
                         f.write(content)
                     logger.info('文件 - 生成strm：' + strm_file)
             except OSError as e:
-                logger.info('文件 - 生成strm：{0} \n {1}'.format(strm_file, e))
+                logger.error('文件 - 生成strm：{0} \n {1}'.format(strm_file, e))
         if ext in config['meta_ext']:
             copy_list.append(item['path'])
-    c = 1
+    c = 0
     t = len(copy_list)
     for copy_item in copy_list:
+        c += 1
         src_file = os.path.join(cloud_base_dir, copy_item)
         dest_file = os.path.join(strm_base_dir, copy_item)
+        if not os.path.exists(src_file):
+            logger.error('[%d / %d] 元数据 - 源文件不存在：%s' % (c, t, src_file))
+            continue
         if os.path.exists(dest_file):
-            continue;
+            logger.info('[%d / %d] 元数据 - 存在：%s' % (c, t, copy_item))
+            continue
         try:
+            logger.info('[%d / %d] 元数据 - 复制：%s' % (c, t, copy_item))
             shutil.copy(src_file, dest_file)
-            logger.info('[%d / %d] 元数据 - 已复制：%s' % (c, t, copy_item))
-        except OSError:
-            pass
-        c += 1
+        except OSError as e:
+            logger.error('[%d / %d] 元数据 - 复制错误：%s \n %s' % (c, t, copy_item, e))
+        
         time.sleep(1)
 
 if __name__ == '__main__':
