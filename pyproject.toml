@@ -9,6 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 p115client = "^0.0.3.8.1"
+httpx = "^0.28.0"
 
 
 [build-system]
