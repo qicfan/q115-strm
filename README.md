@@ -4,6 +4,7 @@
 > 如果有字幕文件，建议修改config.json中的meta_ext，只输入字幕扩展名如.srt即可
 
 ## 特性
+- 扫码获取cookie（无需其他方式配合）
 - 使用115目录树，只有一次请求，不会风控，后续操作都不会跟115交互
 - 支持两种使用模式
     - 本地挂载目录：主要是CD2，会将媒体文件的真实路径写入STRM文件，支持复制元数据
@@ -13,10 +14,6 @@
 - 目录树文件在使用完后会自动删除（请不要中途中断执行）
 
 ## 一、准备工作
-### 获取Cookie
-需要通过各种方法获取cookie，然后写入./15-cookies.txt文件h或者写入config.json的115-cookies字段
-可以直接使用alist的115存储中添加的cookie
-
 ### 修改配置文件: config.json：
 - 115-cookies: 将115的cookie放入这里，会优先使用115-cookies.txt文件
 - strm_root_dir: 115网盘挂载根目录对应的strm文件存放目录，例如：/vol2/1000/网盘/115，媒体服务器的媒体库就选择这个目录下的内容
@@ -28,8 +25,6 @@
     - root_url: alist webdav的115根目录，例如：http://192.168.31.2:5244/dav/115
     - username: alist用户名，例如：strm
     - password: alist密码（不要包含:和@，尽量简单，可以专门添加一个只读权限的用户），例如：123123
-
-获取cookie的方法请自行搜索
 
 ## 二、可执行文件运行：
 1. 下载对应平台的压缩包，并解压
@@ -70,6 +65,7 @@ python3 main.py -t=local -e=Media -c=0
 - [x] 元数据复制
 - [x] 支持源文件不存在时删除目标文件
 - [x] 支持alist webdav
+- [x] 支持扫码登录（解决其他三方获取cookie可能失败的问题）
 - [ ] docker支持 + 简单的web ui (v0.2版本)
 - [ ] docker版本增加监控文件变更，自动生成STRM (v0.2版本)
 - [ ] docker版本接入CD2的webhook，自动生成STRM (v0.2版本)
