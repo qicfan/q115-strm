@@ -8,3 +8,18 @@
 #   created_at - 添加时间
 #   last_sync_at - 最后一次同步时间
 #   last_sync_result - 最后一次同步结果
+
+# get /settings
+# post /settting
+# get /libs
+from flask import Flask
+from flask_restful import Resource, Api
+
+app = Flask(__name__)
+app.config['STATIC_FOLDER'] = 'assets'
+app.config['STATIC_URL_PATH'] = '/assets'
+
+api = Api(app=app)
+
+if __name__ == '__main__':
+    app.run()
