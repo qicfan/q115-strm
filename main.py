@@ -43,7 +43,7 @@ export_dir_path: str = ''
 copy_meta_file: bool = False
 cloud_type: str = 'local'
 
-config_file = os.path.abspath("./config.json")
+config_file = os.path.abspath("./config/config.json")
 with open(config_file, mode='r', encoding='utf-8') as fd_config:
     config = json.load(fd_config)
 
@@ -158,16 +158,7 @@ def work():
 
 def get_src_tree_list():
     ### 解析115目录树，生成目录数组
-    cookies = ''
-    if os.path.exists('./115-cookies.txt'):
-        with open('./115-cookies.txt', mode='r', encoding='utf-8') as f:
-            cookies = f.read()
-    if cookies == '' and config['115-cookies'] != '':
-        cookies = config['115-cookies']
-    if cookies == '':
-        logger.error('请先配置155 cookies')
-        sys.exit(1)
-    client = P115Client(Path("../strm/115-cookies.txt").expanduser(), check_for_relogin=True)
+    client = P115Client(Path("./config/115-cookies.txt").expanduser(), ensure_cookies=True, check_for_relogin=True)
     it = tool.export_dir_parse_iter(client=client, export_file_ids=export_dir_path, target_pid=export_dir_path, parse_iter=tool.parse_export_dir_as_dict_iter, 
                            delete=True, async_=False, show_clock=True)
     i = 0

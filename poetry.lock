@@ -275,19 +275,19 @@ gmpy2 = ["gmpy2"]
 
 [[package]]
 name = "ed2k"
-version = "0.0.1.1"
+version = "0.0.2.1"
 description = "Python ed2k hash module."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "ed2k-0.0.1.1-py3-none-any.whl", hash = "sha256:dc2ea795e5baecde4e702ea32b3b3d7c8b288aa5c9a5c0f8ccc287e8c37274d0"},
-    {file = "ed2k-0.0.1.1.tar.gz", hash = "sha256:ffd325b204a045b3d956de13b3fe6b49747dd424661eea454d21c5d96842e39c"},
+    {file = "ed2k-0.0.2.1-py3-none-any.whl", hash = "sha256:1ed051045ca6c04c1b77ab51e66b2909d3c1b0e42e5e54f2d0a0e9ff64175f9f"},
+    {file = "ed2k-0.0.2.1.tar.gz", hash = "sha256:84eacfdf605087806a57d56e21cbea08dbcc75410ad51e567cf6e510367b4f83"},
 ]
 
 [package.dependencies]
 iterdir = ">=0.0.6"
 pycryptodome = "*"
-python-filewrap = ">=0.2"
+python-filewrap = ">=0.2.6"
 
 [[package]]
 name = "h11"
@@ -672,17 +672,17 @@ python-iterutils = ">=0.0.7"
 
 [[package]]
 name = "p115client"
-version = "0.0.3.8.2"
+version = "0.0.3.8.3.2"
 description = "Python 115 webdisk client."
 optional = false
 python-versions = "<4.0,>=3.11"
 files = [
-    {file = "p115client-0.0.3.8.2-py3-none-any.whl", hash = "sha256:81e223ad36dc820592660ba206a29a5d55df3f47a9ad228154dbf336ea0a47b2"},
-    {file = "p115client-0.0.3.8.2.tar.gz", hash = "sha256:30fa849aad3a142a14246190ec1caa7073027099798e1b92790adb3fb21518e7"},
+    {file = "p115client-0.0.3.8.3.2-py3-none-any.whl", hash = "sha256:8e8163e5d45674d2270a9f5f2a402c4fa98b897eb6d3b58bd0d19eb61ba7e9fb"},
+    {file = "p115client-0.0.3.8.3.2.tar.gz", hash = "sha256:eb3bf8942f229b975800db91dbe88221ef24f502660a5834a9a07812aee3aece"},
 ]
 
 [package.dependencies]
-ed2k = ">=0.0.1.1"
+ed2k = ">=0.0.2.1"
 http_response = "*"
 httpx = "*"
 httpx_request = ">=0.1"
@@ -691,12 +691,11 @@ multidict = "*"
 orjson = "*"
 p115cipher = ">=0.0.3"
 posixpatht = ">=0.0.3"
-pycryptodome = "*"
 python-asynctools = ">=0.0.6.1"
 python-cookietools = ">=0.0.2.1"
 python-dictattr = ">=0.0.4"
 python-encode_uri = ">=0.0.1"
-python-filewrap = ">=0.2.5"
+python-filewrap = ">=0.2.6"
 python-hashtools = ">=0.0.3.3"
 python-http_request = ">=0.0.6"
 python-httpfile = ">=0.0.5"
@@ -938,13 +937,13 @@ files = [
 
 [[package]]
 name = "python-filewrap"
-version = "0.2.5"
+version = "0.2.6"
 description = "Python file wrappers."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "python_filewrap-0.2.5-py3-none-any.whl", hash = "sha256:dbaf528b3e4fff4c88078dee8872fce712464ef64e953932585bcc5afc27b316"},
-    {file = "python_filewrap-0.2.5.tar.gz", hash = "sha256:173c95e158b430498842d46b493b32e00c9bcf62d20e176c11705fcfe6a32f1e"},
+    {file = "python_filewrap-0.2.6-py3-none-any.whl", hash = "sha256:97a02e941ec42d8b74c7c9a7907645346fe9954046f3523eda83e715d0730561"},
+    {file = "python_filewrap-0.2.6.tar.gz", hash = "sha256:2147a7af08ac7b8f91d929abc24b5181dca29fdd2a61d22a55ecefb5430fc528"},
 ]
 
 [package.dependencies]
@@ -1114,13 +1113,13 @@ png = ["pypng"]
 
 [[package]]
 name = "six"
-version = "1.16.0"
+version = "1.17.0"
 description = "Python 2 and 3 compatibility utilities"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 files = [
-    {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
-    {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
+    {file = "six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"},
+    {file = "six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81"},
 ]
 
 [[package]]
@@ -1356,4 +1355,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "9f70a7f4f42e31b6d80df0eee7f53f3f32d4c534612d8dbbee2c040db22126e1"
+content-hash = "b0077fa9b0f1157ee53e146b57c330b5fc86fc83b6b007cdf7f86412facaf8c6"
