@@ -104,6 +104,11 @@ def work():
         c += 1
         delete_real_dir = os.path.join(config['strm_root_dir'], delete_item)
         if os.path.exists(delete_real_dir):
+            # 只删除strm文件
+            _, deleted_ext = os.path.splitext(delete_item)
+            if not deleted_ext in config['strm_ext']:
+                df += 1
+                continue
             try:
                 os.remove(delete_real_dir)
                 logger.info('[%d / %d] 删除：%s' % (c, dt, delete_item))
