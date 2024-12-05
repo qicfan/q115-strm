@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 config: dict | None = None
 export_dir_path: str = ''
-copy_meta_file: bool = False
+copy_meta_file: int = 0
 cloud_type: str = 'local'
 
 config_file = os.path.abspath("./config.json")
@@ -50,7 +50,7 @@ with open(config_file, mode='r', encoding='utf-8') as fd_config:
 parser = argparse.ArgumentParser(prog='115-STRM', description='将挂载的115网盘目录生成STRM', formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('-e', '--export_dir_path', help='要生成目录树的路径，相对路径，不能为空')
 parser.add_argument('-t', '--type', help='使用本地挂载目录或者alist，可选值：local, alist')
-parser.add_argument('-c', '--copy_meta_file', type=int, help='是否复制元数据，可选值：0, 1，0-不复制，1-复制')
+parser.add_argument('-c', '--copy_meta_file', type=int, help='是否复制元数据，可选值：0, 1，0-不复制，1-复制，2-软链接')
 args, unknown = parser.parse_known_args()
 if args.copy_meta_file != None:
     copy_meta_file = args.copy_meta_file
@@ -135,7 +135,7 @@ def work():
     if cloud_type == 'alist':
         logger.info('alist不处理元数据')
     else:
-        if copy_meta_file == True :
+        if copy_meta_file > 0:
             c = 0
             ct = len(copy_list)
             cs = 0
@@ -149,13 +149,18 @@ def work():
                     logger.error('[%d / %d] 元数据 - 源文件不存在：%s' % (c, ct, src_file))
                     continue
                 try:
-                    logger.info('[%d / %d] 元数据 - 复制：%s' % (c, ct, item))
-                    shutil.copy(src_file, dest_file)
+                    if copy_meta_file == 1:
+                        logger.info('[%d / %d] 元数据 - 复制：%s' % (c, ct, item))
+                        shutil.copy(src_file, dest_file)
+                        time.sleep(1)
+                    if copy_meta_file == 2:
+                        logger.info('[%d / %d] 元数据 - 软链：%s' % (c, ct, item))
+                        os.symlink(src_file, dest_file)
                     cs += 1
                 except OSError as e:
                     logger.error('[%d / %d] 元数据 - 复制错误：%s \n %s' % (c, ct, item, e))
                     cf += 1
-                time.sleep(1)
+                
             logger.info('元数据结果：成功: {0}, 失败: {1}, 总共: {2}'.format(cs, cf, ct))
     logger.info('删除结果：成功: {0}, 失败: {1}, 总共: {2}'.format(ds, df, dt))
     logger.info('STRM结果：成功: {0}, 失败: {1}, 总共: {2}'.format(asuc, af, at))
@@ -211,7 +216,7 @@ def strm(path: str):
         strm_file = filename + '.strm'
         strm_real_file = os.path.join(config['strm_root_dir'], strm_file)
         strm_content = ''
-        if type == 'local':
+        if cloud_type == 'local':
             strm_content = os.path.join(config['local']['root_dir'], path)
         else:
             url = config['alist']['root_url'].replace('http://', '')
