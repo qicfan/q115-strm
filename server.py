@@ -52,7 +52,7 @@ class Lib(Resource):
     def delete(self, key: str):
         pass
 
-    def put(self, key: str)
+    def put(self, key: str):
         pass
 
 class LibSync(Resource):
@@ -68,6 +68,12 @@ api.add_resource(Libs, '/libs')
 api.add_resource(Lib, '/lib/<key>')
 api.add_resource(LibSync, '/lib/sync/<key>')
 api.add_resource(LibStop, '/lib/stop/<key>')
+# 跨域支持
+def after_request(resp):
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+app.after_request(after_request)
 
 if __name__ == '__main__':
     app.run()
