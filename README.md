@@ -1,4 +1,4 @@
-#### 增加了扫码登录功能，请清空115-cookies.txt然后执行，程序会在终端输出二维码，扫码登录即可，可以解决115cookie规则变更的问题。
+### 电报交流群：[https://t.me/q115_strm](https://t.me/q115_strm)
 
 ## 介绍
 ##### 基于[p115client](https://github.com/ChenyangGao/p115client)开发，通过生成115目录树来快速完成STRM文件创建，由于只有一次请求所以不会触发风控
