@@ -71,5 +71,5 @@ python3 main.py -t=local -e=Media -c=0
 - [x] 支持扫码登录（解决其他三方获取cookie可能失败的问题）
 - [x] 元数据增加软链接处理方式
 - [ ] docker支持 + 简单的web ui (v0.2版本)
-- [ ] docker版本增加监控文件变更，自动生成STRM (v0.2版本)
-- [ ] docker版本接入CD2的webhook，自动生成STRM (v0.2版本)
+- [ ] docker版本增加监控文件变更，自动生成STRM，CD2 only (v0.2版本)
+- [ ] docker版本支持添加多个同步目录，每个同步目录都可以单独设置类型(local,alist)，strm_ext, meta_ext，以及使用不同的115账号(v0.2版本）
