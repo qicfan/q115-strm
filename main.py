@@ -130,7 +130,7 @@ def work():
             logger.info('[%d / %d] STRM：%s' % (c, at, item))
         else:
             af += 1
-            logger.error('[%d / %d] 错误：%s \n %s' % (c, at, item, e))
+            logger.error('[%d / %d] 错误：%s \n %s' % (c, at, item, rs))
     # 处理元数据
     if cloud_type == 'alist':
         logger.info('alist不处理元数据')
