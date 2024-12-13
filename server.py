@@ -10,7 +10,7 @@ from watch import StartWatch
 LIBS = Libs()
 o5List = OO5List()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="frontend")
 api = Api(app=app)
 
 class Libs(Resource):
@@ -126,13 +126,13 @@ class OO5(Resource):
             return {'code': 500, 'msg': msg, 'data': {}}
         return {'code': 200, 'msg': '', 'data': {}}
 
-api.add_resource(Libs, '/libs')
-api.add_resource(Lib, '/lib/<key>')
-api.add_resource(LibSync, '/lib/sync/<key>')
-api.add_resource(LibStop, '/lib/stop/<key>')
-api.add_resource(LibLog, '/lib/log/<key>')
-api.add_resource(OO5List, '/oo5list')
-api.add_resource(OO5, '/oo5/<key>')
+api.add_resource(Libs, '/api/libs')
+api.add_resource(Lib, '/api/lib/<key>')
+api.add_resource(LibSync, '/api/lib/sync/<key>')
+api.add_resource(LibStop, '/api/lib/stop/<key>')
+api.add_resource(LibLog, '/api/lib/log/<key>')
+api.add_resource(OO5List, '/api/oo5list')
+api.add_resource(OO5, '/api/oo5/<key>')
 
 # 跨域支持
 def after_request(resp):
@@ -150,6 +150,14 @@ def shutdown_server(sig, frame):
 
 app.after_request(after_request)
 
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
+
+@app.route('/assets/<path:filename>')
+def assets(filename):
+    return app.send_static_file('assets/%s' % filename)
+
 if __name__ == '__main__':
     if not os.path.exists('./data/logs'):
         os.makedirs('./data/logs')
@@ -160,4 +168,4 @@ if __name__ == '__main__':
     LIBS.initCron()
     watchProcess = Process(target=StartWatch)
     watchProcess.start()
-    app.run(host='localhost', port=5000)
+    app.run(port=12123)
