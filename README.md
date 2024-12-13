@@ -2,11 +2,8 @@
 
 ## 介绍
 ##### 基于[p115client](https://github.com/ChenyangGao/p115client)开发，通过生成115目录树来快速完成STRM文件创建，由于只有一次请求所以不会触发风控
-##### 不建议复制元数据，目前写死了1秒复制一个文件，加上网络传输，可能要好几秒才能处理一个文件，如果第一次扫盘有上万个文件可能要持续好几个小时。可以配合刮削器（如TMM）对生成的STRM文件再次刮削
-##### 如果有元数据需求，可以使用新增的软链接方式，使用-c=2参数即可，这种方式没有qps限制，可以快速处理大量元数据，但是媒体服务器使用时可能触发风控，或者海报墙和影片信息加载缓慢。
 
 ## 特性
-- 扫码获取cookie（无需其他方式配合）
 - 使用115目录树，只有一次请求，不会风控，后续操作都不会跟115交互
 - 支持两种使用模式
     - 本地挂载目录：主要是CD2，会将媒体文件的真实路径写入STRM文件，支持复制元数据
@@ -41,10 +38,6 @@ main.exe -t=local -e=Media -c=0
 ```console
 pip install -r requirements.txt
 ```
-或者
-```console
-poetry install
-```
 ### 执行脚本
 ```console
 python3 main.py -t=local -e=Media -c=0
@@ -69,6 +62,45 @@ python3 main.py -t=local -e=Media -c=0
 - [x] 支持alist webdav
 - [x] 支持扫码登录（解决其他三方获取cookie可能失败的问题）
 - [x] 元数据增加软链接处理方式
-- [ ] docker支持 + 简单的web ui (v0.2版本)
+- [x] docker支持 + 简单的web ui (v0.2版本)
 - [ ] docker版本增加监控文件变更，自动生成STRM，CD2 only (v0.2版本)
-- [ ] docker版本支持添加多个同步目录，每个同步目录都可以单独设置类型(local,alist)，strm_ext, meta_ext，以及使用不同的115账号(v0.2版本）
+- [x] docker版本定时同步 (v0.2版本)
+- [x] docker版本支持添加多个同步目录，每个同步目录都可以单独设置类型(local,webdav)，strm_ext, meta_ext，以及使用不同的115账号(v0.2版本）
+
+## 六、DOCKER
+   ```bash
+   docker run -d \
+     --name q115strm \
+     -v /vol1/1000/docker/q115strm/data:/app/data \
+     -v /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115 \
+     -v /vol1/1000/视频/网盘/115:/115 \
+     -p 12123:12123 \
+     --restart unless-stopped \
+     qicfan/115strm:latest
+   ```
+
+或者compose
+
+```
+services:
+  115strm:
+    image: qicfan/115strm
+    container_name: q115strm
+    ports:
+        - target: 12123
+          published: 12123
+          protocol: tcp
+    volumes:
+      - /vol1/1000/docker/q115strm/data:/app/data # 运行日志和数据
+      - /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115 # CD2挂载115的的绝对路径，必须完整映射到容器中，如果使用WebDAV则不需要这个映射
+      - /vol1/1000/视频/网盘/115:/115 # 存放STRM文件的根目录
+
+    restart: unless-stopped
+```
+
+### Docker 配置解释
+- `-v /vol1/1000/docker/q115strm/data:/app/data`: 该目录用来存放程序运行的日志和数据，建议映射，后续重装可以直接恢复数据
+- `-v  /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115`: CD2挂载115的的绝对路径，必须完整映射到容器中，如果使用WebDAV则不需要这个映射。
+- `-v /vol1/1000/视频/网盘/115:/115` 存放STRM文件的根目录，必须存在这个映射
+- `-p 12123:12123`: 映射12123端口，一个简易的web ui。
+- `--restart unless-stopped`: 设置容器在退出时自动重启。

@@ -5,3 +5,4 @@
 *.exe
 *.log
 poetry.lock
+/data/config/*

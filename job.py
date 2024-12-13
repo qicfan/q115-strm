@@ -31,8 +31,7 @@ class Job:
         self.key = key
         self.lib = LIBS.getLib(key)
         if self.lib is None:
-            self.logger.error('同步目录不存在: %s' % key)
-            raise ValueError('同步目录不存在')
+            raise ValueError('要执行的同步目录不存在，请刷新同步目录列表检查是否存在')
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.INFO)
         logfile = os.path.abspath("./data/logs/%s.log" % self.lib.key)
@@ -43,8 +42,8 @@ class Job:
         self.logger.addHandler(file_handler)
         self.oo5Account = o5List.get(self.lib.id_of_115)
         if self.oo5Account is None:
-            self.logger.error('115账号不存在: %s' % self.lib.id_of_115)
-            raise ValueError('115账号不存在')
+            self.logger.error('无法找到所选的115账号，请检查115账号列表中是否存在此项: %s' % self.lib.id_of_115)
+            raise ValueError('无法找到所选的115账号，请检查115账号列表中是否存在此项')
         if self.lib.extra.pid > 0:
             self.logger.error('正在同步中，跳过本次执行')
             raise ValueError('正在同步中，跳过本次执行')
