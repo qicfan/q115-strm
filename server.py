@@ -168,4 +168,4 @@ if __name__ == '__main__':
     LIBS.initCron()
     watchProcess = Process(target=StartWatch)
     watchProcess.start()
-    app.run(port=12123)
+    app.run(host="0.0.0.0", port=12123)
