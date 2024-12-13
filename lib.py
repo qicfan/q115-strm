@@ -53,6 +53,8 @@ class LibBase:
 
     def __init__(self, data: None | dict):
         if data is not None:
+            if data.get('mount_path') is None:
+                data['mount_path'] = ''
             self.key = data['key']
             self.name = data['name']
             self.path = data['path']

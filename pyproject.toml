@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "q115-strm"
-version = "0.1.0"
+version = "0.2.1"
 description = "基于p115-client自动生成目录树，然后通过解析目录树生成strm文件，可以快速大批量扫盘且不会触发风控"
 authors = ["qicfan <qicfan@qq.com>"]
 license = "MIT"
