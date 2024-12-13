@@ -37,8 +37,6 @@ jobs:
           GITHUB_TOKEN=${{ secrets.RELEASE_TOKEN }}
         platforms: |
           linux/amd64
-          linux/arm64
-          linux/arm
         push: true
         # 指定用户/仓库名
         tags: |
