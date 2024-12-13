@@ -8,8 +8,12 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-p115client = "^0.0.3.8.1"
+p115client = "^0.0.3.8.2"
 httpx = "^0.28.0"
+httpx_request="^0.1"
+watchdog = "^6.0.0"
+flask = "^3.1.0"
+python-crontab = "^3.2.0"
 
 
 [build-system]
