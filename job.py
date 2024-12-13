@@ -110,7 +110,8 @@ class Job:
             if os.path.exists(delete_real_dir):
                 # 只删除strm文件
                 _, deleted_ext = os.path.splitext(delete_item)
-                if not deleted_ext in self.lib.strm_ext:
+                if deleted_ext != '.strm':
+                    self.logger.error('[%d / %d] 错误：%s \n %s' % (c, dt, delete_item, '只会删除STRM文件'))
                     df += 1
                     continue
                 try:
@@ -120,6 +121,11 @@ class Job:
                 except OSError as e:
                     self.logger.error('[%d / %d] 错误：%s \n %s' % (c, dt, delete_item, e))
                     df += 1
+            else:
+                self.logger.error('[%d / %d] 错误：%s \n %s' % (c, dt, delete_item, '文件已经不存在'))
+                df += 1
+                continue
+
         # 处理添加
         c = 0
         at = len(added)

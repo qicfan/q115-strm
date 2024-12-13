@@ -1,3 +1,3 @@
-##!/bin/bash
-nginx
+#!/bin/bash
+
 python server.py
