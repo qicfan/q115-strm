@@ -14,6 +14,8 @@ def GetNow():
     print(now_beijing)
     return now_beijing.strftime("%Y-%m-%d %H:%M:%S")
 
+
+
 class LibExtra:
     pid: str # 正在运行的进程ID
     status: int # 运行状态: 1-正常，2-运行中，3-中断
@@ -36,6 +38,7 @@ class LibBase:
     path: str # 路径
     type: str # strm类型，'本地路径' | 'WebDAV'
     strm_root_path: str # strm根目录
+    mount_path: str # alist挂载根文件夹，cd2留空
     path_of_115: str # 115挂载根目录
     copy_meta_file: int # 元数据选项：1-关闭，2-复制，3-软链接
     copy_delay: int | float # 元数据复制间隔
@@ -55,6 +58,7 @@ class LibBase:
             self.path = data['path']
             self.type = data['type']
             self.strm_root_path = data['strm_root_path']
+            self.mount_path = data['mount_path']
             self.path_of_115 = data['path_of_115']
             self.copy_meta_file = data['copy_meta_file']
             self.copy_delay = data['copy_delay']
@@ -94,18 +98,16 @@ class Lib(LibBase):
 
     def validate(self) -> tuple[bool, str]:
         # 验证路径是否存在
-
         # 验证STRM根目录是否存在
-        # if not os.path.exists(self.strm_root_path):
-        #     return False, 'STRM根目录不存在'
-        # # 验证115挂在根目录是否存在
-        # if self.path_of_115 != '' and not os.path.exists(self.path_of_115):
-        #     return False, '115挂载根目录不存在'
+        if not os.path.exists(self.strm_root_path):
+            return False, 'STRM根目录不存在，请检查文件系统中是否存在该目录：%s' % self.strm_root_path
+        # 验证115挂在根目录是否存在
+        if self.path_of_115 != '' and not os.path.exists(self.path_of_115):
+            return False, '115挂载根目录不存在，请检查文件系统中是否存在该目录：%s' % self.path_of_115
         return True, ''
 
     def cron(self):
         # 处理定时任务
-
         cron = CronTab(user='root')
         iter = cron.find_comment(self.key)
         existsJob = None
@@ -121,7 +123,7 @@ class Lib(LibBase):
             if existsJob is not None:
                 # 删除定时任务
                 cron.remove(existsJob)
-        pass
+        return True
 
     def getJson(self):
         dict = self.__dict__
@@ -209,9 +211,20 @@ class Libs:
         pass
 
     def deleteLib(self, key: str) -> tuple[bool, str]:
+        lib = self.getLib(key)
+        lib.sync_type = '手动'
+        lib.cron()
         del self.libList[key]
         self.save()
         return True, ''
+    
+    def initCron(self):
+        # 每次启动服务时，检查定时任务是否存在，不存在的创建
+        libs = self.list()
+        for item in libs:
+            item.cron()
+        return True
+
     
 class OO5:
     key: str

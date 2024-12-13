@@ -59,13 +59,16 @@ python3 main.py -t=local -e=Media -c=0
 - [x] STRM生成
 - [x] 元数据复制
 - [x] 支持源文件不存在时删除目标文件
-- [x] 支持alist webdav
+- [x] 支持webdav和本地挂载如CD2
 - [x] 支持扫码登录（解决其他三方获取cookie可能失败的问题）
 - [x] 元数据增加软链接处理方式
 - [x] docker支持 + 简单的web ui (v0.2版本)
-- [ ] docker版本增加监控文件变更，自动生成STRM，CD2 only (v0.2版本)
+- [x] docker版本增加监控文件变更，自动生成STRM，CD2 only (v0.2版本)
 - [x] docker版本定时同步 (v0.2版本)
 - [x] docker版本支持添加多个同步目录，每个同步目录都可以单独设置类型(local,webdav)，strm_ext, meta_ext，以及使用不同的115账号(v0.2版本）
+- [ ] docker版本监控服务使用队列来进行精细化操作，减少对115目录树的生成请求（v0.3版本）
+- [ ] 可执行文件采用交互式命令行来创建配置文件（v0.3版本）
+- [ ] 增加STRM文件整理功能：将STRM软链或者复制到其他文件夹以便刮削，因为STRM根目录是对115网盘的映射无法修改文件名等（V0.4版本）
 
 ## 六、DOCKER
    ```bash

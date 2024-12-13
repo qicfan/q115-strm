@@ -8,7 +8,7 @@ import urllib.parse
 
 from p115client import P115Client, tool
 from lib import OO5, GetNow, Lib, Libs, OO5List
-import os, sys, logging
+import os, logging, sys
 
 LIBS = Libs()
 o5List = OO5List()
@@ -67,7 +67,7 @@ class Job:
         LIBS.saveExtra(self.lib)
         return True
     
-    def stop(self):
+    def stop(self, sig, frame):
         self.lib.extra.status = 3
         self.lib.extra.pid = 0
         LIBS.saveExtra(self.lib)
@@ -190,7 +190,7 @@ class Job:
                 if parent is None:
                     item['path'] = ''
                 else:
-                    if i == 2 and self.lib.path.endswith(item['name']):
+                    if i == 2 and self.lib.getRealPath().endswith(item['name']):
                         item['path'] = self.lib.path
                     else:
                         item['path'] = os.path.join(parent['path'], item['name'].lstrip())
@@ -234,6 +234,10 @@ class Job:
             else:
                 url = self.lib.webdav_url.replace('http://', '').replace('https://', '')
                 path = path.replace(os.sep, '/')
+                if self.lib.mount_path != '':
+                    path.replace(self.lib.mount_path, '')
+                    if path.startswith('/'):
+                        path.lstrip('/')
                 pathList = path.split('/')
                 newPath = []
                 for p in pathList:
@@ -259,6 +263,5 @@ if __name__ == '__main__':
     if args.key != None:
         key = args.key
     if key == '':
-        SystemExit(1)
-    job = Job(key)
-    job.start()
+        sys.exit(0)
+    StarJob(key)

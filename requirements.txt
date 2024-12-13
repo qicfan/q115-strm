@@ -2,3 +2,4 @@ p115client
 flask
 flask_restful
 python-crontab
+watchdog

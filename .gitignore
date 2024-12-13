@@ -6,3 +6,4 @@
 *.log
 poetry.lock
 /data/config/*
+__pycache__
