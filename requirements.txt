@@ -1,4 +1,4 @@
-p115client = "^0.0.3.8.2"
-httpx = "^0.28.0"
-httpx_request="^0.1"
-watchdog = "^6.0.0"
+p115client
+flask
+flask_restful
+python-crontab
