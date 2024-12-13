@@ -13,9 +13,8 @@ RUN chmod -R 0755 /app/frontend/*
 
 RUN cp /app/docker/q115strm.conf /etc/nginx/conf.d/q115strm.conf && \
     pip install -r requirements.txt
-RUN systemctl enable nginx
+RUN echo "service nginx start" >> /etc/rc.local
 
 VOLUME ["/app/data", "/115", "/CloudNAS/115"]
 
-CMD ["service", "start", "nginx"]
 ENTRYPOINT ["python", "server.py"]
