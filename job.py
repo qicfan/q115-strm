@@ -190,7 +190,7 @@ class Job:
                 if parent is None:
                     item['path'] = ''
                 else:
-                    if i == 2 and self.lib.getRealPath().endswith(item['name']):
+                    if i == 2 and self.lib.path.endswith(item['name']):
                         item['path'] = self.lib.path
                     else:
                         item['path'] = os.path.join(parent['path'], item['name'].lstrip())
