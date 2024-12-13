@@ -3,6 +3,7 @@ EXPOSE 12123
 WORKDIR /app
 
 ENV PATH=/app:$PATH
+ENV TZ=Aisa/Shanghai
 
 RUN cp /etc/apt/sources.list.d/debian.sources /etc/apt/sources.list.d/debian.sources.bak \
   && sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources

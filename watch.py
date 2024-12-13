@@ -9,7 +9,7 @@ from job import DetailedFormatter, StarJob
 from lib import Lib, Libs
 
 LIBS = Libs()
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logfile = os.path.abspath("./data/logs/watch.log")
 file_handler = logging.FileHandler(filename=logfile, mode='a', encoding='utf-8')

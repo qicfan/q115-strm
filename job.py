@@ -32,7 +32,7 @@ class Job:
         self.lib = LIBS.getLib(key)
         if self.lib is None:
             raise ValueError('要执行的同步目录不存在，请刷新同步目录列表检查是否存在')
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
         logfile = os.path.abspath("./data/logs/%s.log" % self.lib.key)
         if os.path.exists(logfile):

@@ -116,15 +116,18 @@ class Lib(LibBase):
         for i in iter:
             existsJob = i
         if self.sync_type == '定时':
-            if existsJob == None:
-                jobFile = os.path.abspath('./job.py')
-                job = cron.new(comment="%s" % self.key, command="python3 %s -k %s" % (jobFile, self.key))
-                job.setall(self.cron_str)
+            if existsJob is not None:
+                cron.remove(existsJob)
                 cron.write(user='root')
+            jobFile = os.path.abspath('./job.py')
+            job = cron.new(comment="%s" % self.key, command="python3 %s -k %s" % (jobFile, self.key))
+            job.setall(self.cron_str)
+            cron.write(user='root')
         else:
             if existsJob is not None:
                 # 删除定时任务
                 cron.remove(existsJob)
+                cron.write(user='root')
         return True
 
     def getJson(self):

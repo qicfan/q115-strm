@@ -142,6 +142,7 @@ def after_request(resp):
     return resp
 
 watchProcess: Process | None = None
+cronProcess: Process | None = None
 
 def shutdown_server(sig, frame):
     if watchProcess is not None:
