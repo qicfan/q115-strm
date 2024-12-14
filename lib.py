@@ -4,6 +4,8 @@ import hashlib, os
 from typing import List, Mapping
 from crontab import CronTab
 
+TABFILE = os.path.abspath('./data/config/cron.tab')
+
 def GetNow():
     # 获取当前时间
     now = datetime.datetime.now()
@@ -110,7 +112,7 @@ class Lib(LibBase):
 
     def cron(self):
         # 处理定时任务
-        cron = CronTab(user='root')
+        cron = CronTab(tabfile=TABFILE)
         iter = cron.find_comment(self.key)
         existsJob = None
         for i in iter:
@@ -118,16 +120,16 @@ class Lib(LibBase):
         if self.sync_type == '定时':
             if existsJob is not None:
                 cron.remove(existsJob)
-                cron.write(user='root')
+                cron.write(filename=TABFILE)
             jobFile = os.path.abspath('./job.py')
             job = cron.new(comment="%s" % self.key, command="python3 %s -k %s" % (jobFile, self.key))
             job.setall(self.cron_str)
-            cron.write(user='root')
+            cron.write(filename=TABFILE)
         else:
             if existsJob is not None:
                 # 删除定时任务
                 cron.remove(existsJob)
-                cron.write(user='root')
+                cron.write(filename=TABFILE)
         return True
 
     def getJson(self):
@@ -276,6 +278,7 @@ class OO5List:
         return True
     
     def get(self, key: str) -> OO5 | None:
+        self.loadFromFile()
         return self.list.get(key)
     
     def getList(self) -> List[OO5]:

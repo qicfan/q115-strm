@@ -33,17 +33,7 @@ cd D:\q115-strm
 main.exe -t=local -e=Media -c=0
 ```
 
-## 三、源码使用方法：
-### 安装项目依赖
-```console
-pip install -r requirements.txt
-```
-### 执行脚本
-```console
-python3 main.py -t=local -e=Media -c=0
-```
-
-## 四、参数解释：
+#### 参数解释：
 -t 使用本地挂载目录或者alist，可选值：local, alist; 默认: local
 > - alist使用webdav生成strm内容，可以支持302直链播放，但是无法复制元数据
 > - local使用本地挂载目录（可以是CD2也可以是其他软件，只要能有本地真实目录即可），支持复制元数据
@@ -55,25 +45,11 @@ python3 main.py -t=local -e=Media -c=0
 -c 是否复制元数据到strm目录：0-不复制，1-复制，2-软链接; 默认：0
 > 元数据包括nfo，封面图片，字幕等，支持的扩展名在config.json的meta_ext修改
 
-## 五、TODO
-- [x] STRM生成
-- [x] 元数据复制
-- [x] 支持源文件不存在时删除目标文件
-- [x] 支持webdav和本地挂载如CD2
-- [x] 支持扫码登录（解决其他三方获取cookie可能失败的问题）
-- [x] 元数据增加软链接处理方式
-- [x] docker支持 + 简单的web ui (v0.2版本)
-- [x] docker版本增加监控文件变更，自动生成STRM，CD2 only (v0.2版本)
-- [x] docker版本定时同步 (v0.2版本)
-- [x] docker版本支持添加多个同步目录，每个同步目录都可以单独设置类型(local,webdav)，strm_ext, meta_ext，以及使用不同的115账号(v0.2版本）
-- [ ] docker版本监控服务使用队列来进行精细化操作，减少对115目录树的生成请求（v0.3版本）
-- [ ] 可执行文件采用交互式命令行来创建配置文件（v0.3版本）
-- [ ] 增加STRM文件整理功能：将STRM软链或者复制到其他文件夹以便刮削，因为STRM根目录是对115网盘的映射无法修改文件名等（V0.4版本）
-
-## 六、DOCKER
+## 三、DOCKER
    ```bash
    docker run -d \
      --name q115strm \
+     -e TZ="Asia/Shanghai"
      -v /vol1/1000/docker/q115strm/data:/app/data \
      -v /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115 \
      -v /vol1/1000/视频/网盘/115:/115 \
@@ -89,10 +65,12 @@ services:
   115strm:
     image: qicfan/115strm
     container_name: q115strm
+    environment:
+      - 'TZ=Asia/Shanghai'
     ports:
-        - target: 12123
-          published: 12123
-          protocol: tcp
+      - target: 12123
+        published: 12123
+        protocol: tcp
     volumes:
       - /vol1/1000/docker/q115strm/data:/app/data # 运行日志和数据
       - /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115 # CD2挂载115的的绝对路径，必须完整映射到容器中，如果使用WebDAV则不需要这个映射
@@ -101,9 +79,25 @@ services:
     restart: unless-stopped
 ```
 
-### Docker 配置解释
+#### Docker 配置解释
 - `-v /vol1/1000/docker/q115strm/data:/app/data`: 该目录用来存放程序运行的日志和数据，建议映射，后续重装可以直接恢复数据
 - `-v  /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115`: CD2挂载115的的绝对路径，必须完整映射到容器中，如果使用WebDAV则不需要这个映射。
 - `-v /vol1/1000/视频/网盘/115:/115` 存放STRM文件的根目录，必须存在这个映射
 - `-p 12123:12123`: 映射12123端口，一个简易的web ui。
-- `--restart unless-stopped`: 设置容器在退出时自动重启。
+- `--restart unless-stopped` 设置容器在退出时自动重启。
+- `-e TZ="Asia/Shanghai"` 时区变量，可以根据所在地设置；会影响记录的任务执行时间，定时执行任务的时间 
+
+## 四、TODO
+- [x] STRM生成
+- [x] 元数据复制
+- [x] 支持源文件不存在时删除目标文件
+- [x] 支持webdav和本地挂载如CD2
+- [x] 支持扫码登录（解决其他三方获取cookie可能失败的问题）
+- [x] 元数据增加软链接处理方式
+- [x] docker支持 + 简单的web ui (v0.2版本)
+- [x] docker版本增加监控文件变更，自动生成STRM，CD2 only (v0.2版本)
+- [x] docker版本定时同步 (v0.2版本)
+- [x] docker版本支持添加多个同步目录，每个同步目录都可以单独设置类型(local,webdav)，strm_ext, meta_ext，以及使用不同的115账号(v0.2版本）
+- [x] docker版本监控服务使用队列来进行精细化操作，减少对115目录树的生成请求（v0.3版本）
+- [ ] 可执行文件采用交互式命令行来创建配置文件（v0.3.1版本）
+- [ ] 增加STRM文件整理功能：将STRM软链或者复制到其他文件夹以便刮削，因为STRM根目录是对115网盘的映射无法修改文件名等（V0.4版本）

@@ -264,7 +264,7 @@ def StarJob(key: str):
 if __name__ == '__main__':
     key: str = ''
     parser = argparse.ArgumentParser(prog='115-STRM', description='将挂载的115网盘目录生成STRM', formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-k', '--key', help='要处理的媒体库')
+    parser.add_argument('-k', '--key', help='要处理的同步目录')
     args, unknown = parser.parse_known_args()
     if args.key != None:
         key = args.key

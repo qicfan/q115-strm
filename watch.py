@@ -1,5 +1,5 @@
 from multiprocessing import Process
-import signal, sys
+import signal, sys, shutil
 import time
 from typing import Mapping
 from watchdog.observers import Observer
@@ -27,30 +27,112 @@ class FileEventHandler(FileSystemEventHandler):
         if self.lib is None:
             raise ValueError('同步目录不存在')
         self.taskPool = []
+    
+    def getStrmPath(self, path):
+        # 返回目标位置路径
+        newPath: str = path.replace(self.lib.path_of_115, '')
+        newPath.lstrip(os.sep)
+        return os.path.join(self.lib.strm_root_path, newPath)
+
+    def getPrePath(self, path: str):
+        pathList = path.split(os.sep)
+        pathList.pop()
+        return os.sep.join(pathList)
 
     def on_any_event(self, event):
         pass
 
     def on_moved(self, event):
+        srcStrmPath = self.getStrmPath(event.src_path)
+        destStrmPath = self.getStrmPath(event.dest_path)
         if event.is_directory:
             logger.info("directory moved from {0} to {1}".format(event.src_path,event.dest_path))
+            preStrmPath = self.getPrePath(destStrmPath)
+            if not os.path.exists(srcStrmPath):
+                logger.error("{0}不存在，无法移动到{1}".format(srcStrmPath, destStrmPath))
+                return False
+            if not os.path.exists(preStrmPath):
+                logger.info("{0}不存在，创建该目录".format(preStrmPath))
+                os.makedirs(preStrmPath)
+            if not os.path.exists(destStrmPath):
+                shutil.move(srcStrmPath, destStrmPath)
+                logger.info("移动：{0} => {1}".format(srcStrmPath, destStrmPath))
         else:
             logger.info("file moved from {0} to {1}".format(event.src_path,event.dest_path))
-        self.taskPool.append(timestamp = time.time())
+            # 检查是否STRM文件
+            filename, ext = os.path.splitext(srcStrmPath)
+            destFilename, ext = os.path.splitext(destStrmPath)
+            srcStrmFile = srcStrmPath
+            destStrmFile = destStrmPath
+            if ext in self.lib.strm_ext:
+                srcStrmFile = "{0}.strm".format(filename)
+                destStrmFile = "{0}.strm".format(destFilename)
+                logger.info("检测到原文件为STRM文件，生成映射文件: {0} => {1}".format(srcStrmPath, srcStrmFile))
+                logger.info("检测到目标文件为STRM文件，生成映射文件: {0} => {1}".format(destStrmPath, destStrmFile))
+                if not os.path.exists(srcStrmFile):
+                    logger.error("{0}不存在，无法移动到{1}".format(srcStrmFile, destStrmFile))
+                    return False
+            destPath = os.path.dirname(destStrmFile)
+            if not os.path.exists(destPath):
+                os.makedirs(destPath)
+                logger.info("{0}不存在，创建该目录".format(destPath))
+            shutil.move(srcStrmFile, destStrmFile)
+            logger.info("移动：{0} => {1}".format(srcStrmFile, destStrmFile))
+        return True
+        # self.taskPool.append(timestamp = time.time())
 
     def on_created(self, event):
+        srcStrmFile = self.getStrmPath(event.src_path)
+        if os.path.exists(srcStrmFile):
+            logger.info("{0}已存在，无须添加".format(srcStrmFile))
+            return False
         if event.is_directory:
             logger.info("directory created:{0}".format(event.src_path))
+            if not os.path.exists(srcStrmFile):
+                os.makedirs(srcStrmFile)
+                logger.info("{0}不存在，创建该目录".format(srcStrmFile))
         else:
             logger.info("file created:{0}".format(event.src_path))
-        self.taskPool.append(timestamp = time.time())
+            filename, ext = os.path.splitext(srcStrmFile)
+            if ext in self.lib.strm_ext:
+                strmFile = "{0}.strm".format(filename)
+                logger.info("检测到原文件为STRM文件，生成映射文件: {0} => {1}".format(srcStrmFile, strmFile))
+                # 只处理strm文件
+                with open(strmFile, mode='w', encoding='utf-8') as f:
+                    f.write(event.src_path)
+                logger.info("STRM文件: {0} => {1}".format(strmFile, event.src_path))
+            if ext in self.lib.meta_ext:
+                # 处理元数据
+                if self.lib.copy_meta_file == '复制':
+                    shutil.copy(event.src_path, srcStrmFile)
+                    logger.info("元数据复制: {0} => {1}".format(event.src_path, srcStrmFile))
+                if self.lib.copy_meta_file == '软链接':
+                    os.symlink(event.src_path, srcStrmFile)
+                    logger.info("元数据软链: {0} => {1}".format(event.src_path, srcStrmFile))
+        # self.taskPool.append(timestamp = time.time())
 
     def on_deleted(self, event):
+        srcStrmFile = self.getStrmPath(event.src_path)
+        if not os.path.exists(srcStrmFile):
+            logger.info("{0}不存在，无须删除".format(srcStrmFile))
+            return False
         if event.is_directory:
             logger.info("directory deleted:{0}".format(event.src_path))
+            shutil.rmtree(srcStrmFile)
         else:
             logger.info("file deleted:{0}".format(event.src_path))
-        self.taskPool.append(timestamp = time.time())
+            filename, ext = os.path.splitext(event.src_path)
+            if ext in self.lib.strm_ext:
+                # 尝试删除strm文件
+                strmFile = "{0}.strm".format(filename)
+                if os.path.exists(strmFile):
+                    os.unlink(strmFile)
+            else:
+                if os.path.exists(srcStrmFile):
+                    os.unlink(srcStrmFile)
+                
+        return True
+        # self.taskPool.append(timestamp = time.time())
 
     def on_modified(self, event):
         if not event.is_directory:
@@ -71,15 +153,15 @@ def watch(key: str):
         try:
             while True:
                 # 取最后一次事件事件，如果间隔3分钟或以上，则触发一次任务，然后清空队列
-                if len(eventHandler.taskPool) > 0:
-                    lastTime = eventHandler.taskPool[len(eventHandler.taskPool) - 1]
-                    currentTime = time.time()
-                    if currentTime - lastTime >= 180:
-                        eventHandler.taskPool = []
-                        p1 = Process(target=StarJob, kwargs={'key': eventHandler.lib.key})
-                        p1.start()
-                        p1.join()
-                time.sleep(3) # 监控频率（1s1次，根据自己的需求进行监控）
+                # if len(eventHandler.taskPool) > 0:
+                #     lastTime = eventHandler.taskPool[len(eventHandler.taskPool) - 1]
+                #     currentTime = time.time()
+                #     if currentTime - lastTime >= 180:
+                #         eventHandler.taskPool = []
+                #         p1 = Process(target=StarJob, kwargs={'key': eventHandler.lib.key})
+                #         p1.start()
+                #         p1.join()
+                time.sleep(1) # 监控频率（1s1次，根据自己的需求进行监控）
         except KeyboardInterrupt:
             observer.stop()
         observer.join()

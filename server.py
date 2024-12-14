@@ -1,11 +1,10 @@
 from multiprocessing import Process
-import os, sys
+import os
 import signal
 from flask import Flask
 from flask_restful import Resource, Api, request
 from job import StarJob
 from lib import Libs, Lib, OO5List
-from watch import StartWatch
 
 LIBS = Libs()
 o5List = OO5List()
@@ -141,14 +140,6 @@ def after_request(resp):
     resp.headers['Access-Control-Allow-Headers'] = 'Content-Type,XFILENAME,XFILECATEGORY,XFILESIZE,x-requested-with,Authorization'
     return resp
 
-watchProcess: Process | None = None
-cronProcess: Process | None = None
-
-def shutdown_server(sig, frame):
-    if watchProcess is not None:
-        watchProcess.terminate()
-    sys.exit(0)
-
 app.after_request(after_request)
 
 @app.route('/')
@@ -159,14 +150,8 @@ def index():
 def assets(filename):
     return app.send_static_file('assets/%s' % filename)
 
-if __name__ == '__main__':
-    if not os.path.exists('./data/logs'):
-        os.makedirs('./data/logs')
-    if not os.path.exists('./data/config'):
-        os.makedirs('./data/config')
-    signal.signal(signal.SIGINT, shutdown_server)
-    signal.signal(signal.SIGTERM, shutdown_server)
-    LIBS.initCron()
-    watchProcess = Process(target=StartWatch)
-    watchProcess.start()
+def StartServer():
     app.run(host="0.0.0.0", port=12123)
+
+if __name__ == '__main__':
+    StartServer()
