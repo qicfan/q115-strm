@@ -31,7 +31,7 @@ class FileEventHandler(FileSystemEventHandler):
     def getStrmPath(self, path):
         # 返回目标位置路径
         newPath: str = path.replace(self.lib.path_of_115, '')
-        newPath.lstrip(os.sep)
+        newPath = newPath.lstrip(os.sep)
         return os.path.join(self.lib.strm_root_path, newPath)
 
     def getPrePath(self, path: str):
@@ -197,13 +197,13 @@ def StartWatch():
                         # 结束进程
                         logger.info('同步目录[%s]的同步方式变更为非监控，终止监控任务' % item.path)
                         p.terminate()
-                        del pool[key]
+                        del pool[item.key]
                 else:
                     if p is None:
                         # 启动新的子进程
                         p = Process(target=watch, kwargs={'key': item.key})
                         p.start()
-                        pool[key] = p
+                        pool[item.key] = p
                         logger.info('新增同步目录[%s]，已启动监控任务' % item.path)
             libList = LIBS.libList
             for key in pool:
