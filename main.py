@@ -1,11 +1,9 @@
 import hashlib
-import logging
 from multiprocessing import Process
 import signal
 import os, sys
 import time
 
-from job import DetailedFormatter
 from lib import TABFILE, Libs
 from server import StartServer
 from watch import StartWatch

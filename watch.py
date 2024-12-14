@@ -214,3 +214,6 @@ def StartWatch():
                     del pool[key]
                     logger.info('同步目录[%s]已删除，终止监控任务' % item.path)
         time.sleep(10)
+
+if __name__ == '__main__':
+    StartWatch()
