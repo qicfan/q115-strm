@@ -160,8 +160,8 @@ def watch(key: str):
         except KeyboardInterrupt:
             observer.stop()
         observer.join()
-    except:
-        logger.info('同步目录[%s]不存在，无法启动监控任务' % key)
+    except Exception as e:
+        logger.info('同步目录[{0}]无法启动监控任务\n {1}'.format(key, e))
         pass
 
 def StartWatch():
@@ -200,7 +200,7 @@ def StartWatch():
                     p = Process(target=watch, kwargs={'key': item.key})
                     p.start()
                     pool[item.key] = p
-                    logger.info('新增同步目录[%s]，已启动监控任务' % item.path)
+                    logger.info('新增同步目录[%s]监控任务' % item.path)
         libList = LIBS.libList
         for key in pool:
             item = libList.get(key)
@@ -209,6 +209,7 @@ def StartWatch():
                 pool[key].terminate()
                 del pool[key]
                 logger.info('同步目录[%s]已删除，终止监控任务' % item.path)
+        time.sleep(10)
 
 if __name__ == '__main__':
     StartWatch()
