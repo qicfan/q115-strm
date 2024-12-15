@@ -41,16 +41,18 @@ class FileEventHandler(FileSystemEventHandler):
         srcStrmPath = self.getStrmPath(event.src_path)
         destStrmPath = self.getStrmPath(event.dest_path)
         if event.is_directory:
-            preStrmPath = self.getPrePath(destStrmPath)
-            if not os.path.exists(srcStrmPath):
-                logger.error("{0}不存在，无法移动到{1}".format(srcStrmPath, destStrmPath))
-                return False
-            if not os.path.exists(preStrmPath):
-                logger.info("{0}不存在，创建该目录".format(preStrmPath))
-                os.makedirs(preStrmPath)
-            if not os.path.exists(destStrmPath):
-                shutil.move(srcStrmPath, destStrmPath)
-                logger.info("移动：{0} => {1}".format(srcStrmPath, destStrmPath))
+            # preStrmPath = self.getPrePath(destStrmPath)
+            # if not os.path.exists(srcStrmPath):
+            #     logger.error("{0}不存在，无法移动到{1}".format(srcStrmPath, destStrmPath))
+            #     return False
+            # if not os.path.exists(preStrmPath):
+            #     logger.info("{0}不存在，创建该目录".format(preStrmPath))
+            #     os.makedirs(preStrmPath)
+            # if not os.path.exists(destStrmPath):
+            #     shutil.move(srcStrmPath, destStrmPath)
+            #     logger.info("移动：{0} => {1}".format(srcStrmPath, destStrmPath))
+            logger.warning("不处理文件移动，因为需要修改STRM文件内的路径 {0} => {1}".format(srcStrmPath, destStrmPath))
+            pass
         else:
             # 检查是否STRM文件
             filename, ext = os.path.splitext(srcStrmPath)
