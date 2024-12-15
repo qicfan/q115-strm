@@ -3,7 +3,7 @@ import os
 import signal
 from flask import Flask
 from flask_restful import Resource, Api, request
-from job import StarJob
+from job import StartJob
 from lib import Libs, Lib, OO5List
 
 LIBS = Libs()
@@ -59,7 +59,7 @@ class LibSync(Resource):
             return {'code': 404, 'msg': '同步目录不存在', 'data': {}}
         if lib.extra.pid > 0:
             return {'code': 500, 'msg': '该目录正在同步中...', 'data': {}}
-        p1 = Process(target=StarJob, kwargs={'key': key})
+        p1 = Process(target=StartJob, kwargs={'key': key})
         p1.start()
         return {'code': 200, 'msg': '已启动任务', 'data': {}} 
 

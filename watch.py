@@ -5,16 +5,11 @@ from typing import Mapping
 from watchdog.observers import Observer
 from watchdog.events import *
 
-from job import DetailedFormatter, StarJob
 from lib import Lib, Libs
+from log import getLogger
 
 LIBS = Libs()
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logfile = os.path.abspath("./data/logs/watch.log")
-file_handler = logging.FileHandler(filename=logfile, mode='a', encoding='utf-8')
-file_handler.setFormatter(DetailedFormatter())
-logger.addHandler(file_handler)
+logger = getLogger(name='watch', rotating=True, stream=True)
 
 class FileEventHandler(FileSystemEventHandler):
 
@@ -113,11 +108,11 @@ class FileEventHandler(FileSystemEventHandler):
 
     def on_deleted(self, event):
         srcStrmFile = self.getStrmPath(event.src_path)
-        if not os.path.exists(srcStrmFile):
-            logger.info("{0}不存在，无须删除".format(srcStrmFile))
-            return False
         if event.is_directory:
             logger.info("directory deleted:{0}".format(event.src_path))
+            if not os.path.exists(srcStrmFile):
+                logger.info("{0}不存在，无须删除".format(srcStrmFile))
+                return False
             shutil.rmtree(srcStrmFile)
         else:
             logger.info("file deleted:{0}".format(event.src_path))
@@ -187,33 +182,33 @@ def StartWatch():
     while(True):
         libs = LIBS.list()
         if len(libs) == 0:
-            logger.info('没有需要监控的目录，等待下次触发')
-        else:
-            for item in libs:
-                # 检查是否存在进程
-                p = pool.get(item.key)
-                if item.sync_type != '监控变更':
-                    if p is not None:
-                        # 结束进程
-                        logger.info('同步目录[%s]的同步方式变更为非监控，终止监控任务' % item.path)
-                        p.terminate()
-                        del pool[item.key]
-                else:
-                    if p is None:
-                        # 启动新的子进程
-                        p = Process(target=watch, kwargs={'key': item.key})
-                        p.start()
-                        pool[item.key] = p
-                        logger.info('新增同步目录[%s]，已启动监控任务' % item.path)
-            libList = LIBS.libList
-            for key in pool:
-                item = libList.get(key)
-                if item is None:
-                    # 同步目录已删除，终止任务
-                    pool[key].terminate()
-                    del pool[key]
-                    logger.info('同步目录[%s]已删除，终止监控任务' % item.path)
-        time.sleep(10)
+            # logger.info('没有需要监控的目录，等待下次触发')
+            time.sleep(10)
+            continue
+        for item in libs:
+            # 检查是否存在进程
+            p = pool.get(item.key)
+            if item.sync_type != '监控变更':
+                if p is not None:
+                    # 结束进程
+                    logger.info('同步目录[%s]的同步方式变更为非监控，终止监控任务' % item.path)
+                    p.terminate()
+                    del pool[item.key]
+            else:
+                if p is None:
+                    # 启动新的子进程
+                    p = Process(target=watch, kwargs={'key': item.key})
+                    p.start()
+                    pool[item.key] = p
+                    logger.info('新增同步目录[%s]，已启动监控任务' % item.path)
+        libList = LIBS.libList
+        for key in pool:
+            item = libList.get(key)
+            if item is None:
+                # 同步目录已删除，终止任务
+                pool[key].terminate()
+                del pool[key]
+                logger.info('同步目录[%s]已删除，终止监控任务' % item.path)
 
 if __name__ == '__main__':
     StartWatch()

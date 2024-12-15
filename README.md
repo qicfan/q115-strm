@@ -51,7 +51,7 @@ main.exe -t=local -e=Media -c=0
      --name q115strm \
      -e TZ="Asia/Shanghai"
      -v /vol1/1000/docker/q115strm/data:/app/data \
-     -v /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115 \
+     -v /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115:shared \
      -v /vol1/1000/视频/网盘/115:/115 \
      -p 12123:12123 \
      --restart unless-stopped \
@@ -73,7 +73,7 @@ services:
         protocol: tcp
     volumes:
       - /vol1/1000/docker/q115strm/data:/app/data # 运行日志和数据
-      - /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115 # CD2挂载115的的绝对路径，必须完整映射到容器中，如果使用WebDAV则不需要这个映射
+      - /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115:shared # CD2挂载115的的绝对路径，必须完整映射到容器中，如果使用WebDAV则不需要这个映射
       - /vol1/1000/视频/网盘/115:/115 # 存放STRM文件的根目录
 
     restart: unless-stopped
@@ -81,7 +81,7 @@ services:
 
 #### Docker 配置解释
 - `-v /vol1/1000/docker/q115strm/data:/app/data`: 该目录用来存放程序运行的日志和数据，建议映射，后续重装可以直接恢复数据
-- `-v  /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115`: CD2挂载115的的绝对路径，必须完整映射到容器中，如果使用WebDAV则不需要这个映射。
+- `-v  /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115:shared`: CD2挂载115的的绝对路径，必须完整映射到容器中，如果使用WebDAV则不需要这个映射。
 - `-v /vol1/1000/视频/网盘/115:/115` 存放STRM文件的根目录，必须存在这个映射
 - `-p 12123:12123`: 映射12123端口，一个简易的web ui。
 - `--restart unless-stopped` 设置容器在退出时自动重启。

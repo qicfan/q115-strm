@@ -13,7 +13,6 @@ def GetNow():
     beijing = pytz.timezone('Asia/Shanghai')
     # 将当前时间转换为北京时区
     now_beijing = now.astimezone(beijing)
-    print(now_beijing)
     return now_beijing.strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -54,30 +53,58 @@ class LibBase:
     meta_ext: list[str] # 元数据扩展名
 
     def __init__(self, data: None | dict):
-        if data is not None:
-            if data.get('mount_path') is None:
-                data['mount_path'] = ''
-            self.key = data['key']
-            self.name = data['name']
-            self.path = data['path']
-            self.type = data['type']
-            self.strm_root_path = data['strm_root_path']
-            self.mount_path = data['mount_path']
-            self.path_of_115 = data['path_of_115']
-            self.copy_meta_file = data['copy_meta_file']
-            self.copy_delay = data['copy_delay']
-            self.webdav_url = data['webdav_url']
-            self.webdav_username = data['webdav_username']
-            self.webdav_password = data['webdav_password']
-            self.sync_type = data['sync_type']
-            self.cron_str = data['cron_str']
-            self.id_of_115 = data.get('id_of_115')
-            self.strm_ext = data.get('strm_ext')
-            self.meta_ext = data.get('meta_ext')
-            if self.key == '':
-                m = hashlib.md5()
-                m.update(self.path.encode(encoding='UTF-8'))
-                self.key = m.hexdigest()
+        if data is None:
+            return
+        self.key = data.get('key') if data.get('key') is not None else ''
+        self.name = data.get('name') if data.get('name') is not None else ''
+        self.path = data.get('path') if data.get('path') is not None else ''
+        self.type = data.get('type') if data.get('type') is not None else '本地路径'
+        self.strm_root_path = data.get('strm_root_path') if data.get('strm_root_path') is not None else ''
+        self.mount_path = data.get('mount_path') if data.get('mount_path') is not None else ''
+        self.path_of_115 = data.get('path_of_115') if data.get('path_of_115') is not None else ''
+        self.copy_meta_file = data.get('copy_meta_file') if data.get('copy_meta_file') is not None else '关闭'
+        self.copy_delay = data.get('copy_delay') if data.get('copy_delay') is not None else 1
+        self.webdav_url = data.get('webdav_url') if data.get('webdav_url') is not None else ''
+        self.webdav_username = data.get('webdav_username') if data.get('webdav_username') is not None else ''
+        self.webdav_password = data.get('webdav_password') if data.get('webdav_password') is not None else ''
+        self.sync_type = data.get('sync_type') if data.get('sync_type') is not None else '手动'
+        self.cron_str = data.get('cron_str') if data.get('cron_str') is not None else ''
+        self.id_of_115 = data.get('id_of_115') if data.get('id_of_115') is not None else ''
+        self.strm_ext = data.get('strm_ext') if data.get('strm_ext') is not None else [
+            '.mkv',
+            '.mp4',
+            '.ts',
+            '.avi',
+            '.mov',
+            '.mpeg',
+            '.mpg',
+            '.wmv',
+            '.3gp',
+            '.m4v',
+            '.flv',
+            '.m2ts',
+            '.f4v',
+            '.tp',
+        ]
+        self.meta_ext = data.get('meta_ext') if data.get('meta_ext') is not None else [
+            '.jpg',
+            '.jpeg',
+            '.png',
+            '.webp',
+            '.nfo',
+            '.srt',
+            '.ass',
+            '.svg',
+            '.sup',
+            '.lrc',
+        ]
+        if self.key == '':
+            self.makeKey()
+            
+    def makeKey(self):
+        m = hashlib.md5()
+        m.update(self.path.encode(encoding='UTF-8'))
+        self.key = m.hexdigest()
 
 
 class Lib(LibBase):
@@ -164,7 +191,10 @@ class Libs:
     
     def list(self) -> List[Lib]:
         self.loadFromFile()
-        return self.libList.values()
+        l: list[Lib] = []
+        for key in self.libList:
+            l.append(self.libList.get(key))
+        return l
     
     def save(self) -> bool:
         with open(self.libs_file, mode='w', encoding='utf-8') as fd_libs:
@@ -256,7 +286,7 @@ class OO5:
 
 class OO5List:
     oo5_files = os.path.abspath("./data/config/115.json")
-    list: Mapping[str, List[OO5]] # 115账号列表
+    list: Mapping[str, OO5] # 115账号列表
 
     def __init__(self):
         self.list = {}
@@ -281,11 +311,18 @@ class OO5List:
         self.loadFromFile()
         return self.list.get(key)
     
+    def getByCookie(self, cookies: str) -> OO5 | None:
+        self.loadFromFile()
+    
     def getList(self) -> List[OO5]:
         self.loadFromFile()
-        return self.list.values()
+        l: list[OO5] = []
+        for key in self.list:
+            l.append(self.list.get(key))
+        return l
     
     def add(self, data: dict) -> tuple[bool, str]:
+        self.loadFromFile()
         for key in self.list:
             if self.list[key].name == data['name'] or self.list[key].cookie == data['cookie']:
                 return False, '名称或者cookie已存在'
@@ -301,6 +338,7 @@ class OO5List:
         return True, ''
     
     def updateOO5(self, key: str, data: dict):
+        self.loadFromFile()
         oo5 = self.get(key)
         if oo5 is None:
             return False, '115账号不存在'
@@ -312,6 +350,7 @@ class OO5List:
         return True, ''
 
     def delOO5(self, key: str):
+        self.loadFromFile()
         oo5 = self.get(key)
         if oo5 is None:
             return True, ''

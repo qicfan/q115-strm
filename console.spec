@@ -1,9 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-import os, shutil
 
 a = Analysis(
-    ['main.py'],
+    ['console.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -23,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='q115strm',
+    name='console',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -37,7 +36,3 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
-
-shutil.copy(os.path.abspath("config.json"), os.path.abspath("dist/config.json"))
-with open(os.path.abspath("dist/115-cookies.txt"), "w", encoding="utf-8") as f:
-    f.write("")

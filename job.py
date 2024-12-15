@@ -10,14 +10,11 @@ from p115client import P115Client, tool
 from lib import OO5, GetNow, Lib, Libs, OO5List
 import os, logging, sys
 
+from log import DetailedFormatter, getLogger
+
 LIBS = Libs()
 o5List = OO5List()
 
-class DetailedFormatter(logging.Formatter):
-    """如果日志记录包含异常信息，则将传递给异常的参数一起记录下来"""
-    def __init__(self, fmt='%(asctime)s %(levelname)s: %(message)s',
-                 datefmt='%Y-%m-%d %H:%M:%S', *args) -> None:
-        super().__init__(fmt, datefmt, *args)
 
 class Job:
     key: str
@@ -27,19 +24,12 @@ class Job:
 
     copyList: list[str]
 
-    def __init__(self, key: str):
+    def __init__(self, key: str, logStream: bool = False):
         self.key = key
         self.lib = LIBS.getLib(key)
         if self.lib is None:
             raise ValueError('要执行的同步目录不存在，请刷新同步目录列表检查是否存在')
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
-        logfile = os.path.abspath("./data/logs/%s.log" % self.lib.key)
-        if os.path.exists(logfile):
-            os.remove(logfile)
-        file_handler = logging.FileHandler(filename=logfile, mode='a', encoding='utf-8')
-        file_handler.setFormatter(DetailedFormatter())
-        self.logger.addHandler(file_handler)
+        self.logger = getLogger(name = self.lib.key, clear=True, stream=logStream)
         self.oo5Account = o5List.get(self.lib.id_of_115)
         if self.oo5Account is None:
             self.logger.error('无法找到所选的115账号，请检查115账号列表中是否存在此项: %s' % self.lib.id_of_115)
@@ -255,8 +245,8 @@ class Job:
         except OSError as e:
             return e
         
-def StarJob(key: str):
-    job = Job(key)
+def StartJob(key: str, logStream: bool = False):
+    job = Job(key, logStream)
     signal.signal(signal.SIGINT, job.stop)
     signal.signal(signal.SIGTERM, job.stop)
     job.start()
@@ -270,4 +260,4 @@ if __name__ == '__main__':
         key = args.key
     if key == '':
         sys.exit(0)
-    StarJob(key)
+    StartJob(key)
