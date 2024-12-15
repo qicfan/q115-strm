@@ -13,37 +13,22 @@
 - 元数据创建软链接，可以快速完成元数据同步，但是媒体服务器显示海报墙时受所用挂载服务qps影响，也有触发风控的风险
 - 目录树文件在使用完后会自动删除（请不要中途中断执行）
 
-## 一、准备工作
-### 修改配置文件: config.json：
-- strm_root_dir: 115网盘挂载根目录对应的strm文件存放目录，例如：/vol2/1000/网盘/115，媒体服务器的媒体库就选择这个目录下的内容
-- strm_ext: 要生成strm文件的扩展名，默认包含音乐类型，如果只有电影，就手动删除对应扩展名如.wav、 .flac、 .mp3等
-- meta_ext: 元数据扩展名
-- local
-    - root_dir: 115网盘挂载的本地根目录，如果使用local模式，需要设置这个参数，例如：/CloudNAS/115
-- alist
-    - root_url: alist webdav的115根目录，例如：http://192.168.31.2:5244/dav/115
-    - username: alist用户名，例如：strm
-    - password: alist密码（不要包含:和@，尽量简单，可以专门添加一个只读权限的用户），例如：123123
-
-## 二、可执行文件运行：
+## 一、可执行文件运行：
 1. 下载对应平台的压缩包，并解压
 2. 打开终端切换到项目目录执行命令，比如解压到了D盘q115-strm目录：
 ```console
 cd D:\q115-strm
-main.exe -t=local -e=Media -c=0
+// 查看同步目录列表
+q115strm.exe list
+// 添加115账号
+q115strm.exe add115
+// 添加同步目录
+q115strm.exe create
+// 执行全部同步任务
+q115strm.exe run
+// 执行单个同步任务
+q115strm.exe run -k=xxx
 ```
-
-#### 参数解释：
--t 使用本地挂载目录或者alist，可选值：local, alist; 默认: local
-> - alist使用webdav生成strm内容，可以支持302直链播放，但是无法复制元数据
-> - local使用本地挂载目录（可以是CD2也可以是其他软件，只要能有本地真实目录即可），支持复制元数据
-
--e 要生成目录树的目录，相对路径，不能为空，例如：
-- 单层：media
-- 多层：media/movie/合集
-
--c 是否复制元数据到strm目录：0-不复制，1-复制，2-软链接; 默认：0
-> 元数据包括nfo，封面图片，字幕等，支持的扩展名在config.json的meta_ext修改
 
 ## 三、DOCKER
    ```bash
