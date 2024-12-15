@@ -78,12 +78,10 @@ class FileEventHandler(FileSystemEventHandler):
             logger.info("{0}已存在，无须添加".format(srcStrmFile))
             return False
         if event.is_directory:
-            logger.info("directory created:{0}".format(event.src_path))
             if not os.path.exists(srcStrmFile):
                 os.makedirs(srcStrmFile)
                 logger.info("{0}不存在，创建该目录".format(srcStrmFile))
         else:
-            logger.info("file created:{0}".format(event.src_path))
             filename, ext = os.path.splitext(srcStrmFile)
             if ext in self.lib.strm_ext:
                 strmFile = "{0}.strm".format(filename)
@@ -126,8 +124,7 @@ class FileEventHandler(FileSystemEventHandler):
         # self.taskPool.append(timestamp = time.time())
 
     def on_modified(self, event):
-        if not event.is_directory:
-            logger.info("file modified:{0}".format(event.src_path))
+        pass
 
 
 def watch(key: str):
