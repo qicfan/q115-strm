@@ -30,7 +30,7 @@ q115strm.exe run
 q115strm.exe run -k=xxx
 ```
 
-## 三、DOCKER
+## 二、DOCKER
    ```bash
    docker run -d \
      --name q115strm \
@@ -72,7 +72,7 @@ services:
 - `--restart unless-stopped` 设置容器在退出时自动重启。
 - `-e TZ="Asia/Shanghai"` 时区变量，可以根据所在地设置；会影响记录的任务执行时间，定时执行任务的时间 
 
-## 四、TODO
+## 三、TODO
 - [x] STRM生成
 - [x] 元数据复制
 - [x] 支持源文件不存在时删除目标文件
