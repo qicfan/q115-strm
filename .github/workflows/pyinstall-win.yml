@@ -11,10 +11,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
+        os: ['windows-latest', 'ubuntu-latest']
 
     env:
-      MAIN_PY_FILE: 'console.py'  # Define the path to your main.py file here
+      MAIN_PY_FILE: 'console.spec'  # Define the path to your main.py file here
 
     steps:
     - name: Checkout code
@@ -37,7 +37,7 @@ jobs:
 
     - name: Build executable
       run: |
-        pyinstaller -F ${{ env.MAIN_PY_FILE }}
+        pyinstaller ${{ env.MAIN_PY_FILE }}
       working-directory: ./
 
     - name: Create Artifact (Windows)
@@ -47,19 +47,37 @@ jobs:
         name: windows-executables
         path: dist/
 
+    - name: Zip the app (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: vimtor/action-zip@v1.2
+      with:
+        files: dist/q115strm.exe
+        dest: dist/windows-x86.zip
+
+    - uses: actions/upload-artifact@v4
+      if: matrix.os == 'windows-latest'
+      with:
+        name: windows app
+        path: dist/linux-x86.zip
+
     - name: Create Artifact (Linux)
       if: matrix.os == 'ubuntu-latest'
       uses: actions/upload-artifact@v3
       with:
         name: linux-executables
         path: dist/
-
-    - name: Create Artifact (macOS)
-      if: matrix.os == 'macos-latest'
-      uses: actions/upload-artifact@v3
+    - name: Zip the app (Windows)
+      if: matrix.os == 'ubuntu-latest'
+      uses: vimtor/action-zip@v1.2
       with:
-        name: macos-executables
-        path: dist/
+        files: dist/q115strm
+        dest: dist/linux-x86.zip
+
+    - uses: actions/upload-artifact@v4
+      if: matrix.os == 'ubuntu-latest'
+      with:
+        name: linux app
+        path: dist/linux-x86.zip
 
     - name: List files in dist folder
       run: ls -R ./dist/
