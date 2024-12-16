@@ -68,7 +68,7 @@ class FileEventHandler(FileSystemEventHandler):
             destPath = os.path.dirname(destStrmFile)
             if not os.path.exists(destPath):
                 os.makedirs(destPath)
-                logger.info("{0}不存在，创建该目录".format(destPath))
+                logger.info("创建目录：{0}".format(destPath))
             shutil.move(srcStrmFile, destStrmFile)
             logger.info("移动：{0} => {1}".format(srcStrmFile, destStrmFile))
         return True
@@ -77,12 +77,12 @@ class FileEventHandler(FileSystemEventHandler):
     def on_created(self, event):
         srcStrmFile = self.getStrmPath(event.src_path)
         if os.path.exists(srcStrmFile):
-            logger.info("{0}已存在，无须添加".format(srcStrmFile))
+            logger.info("已存在：{0}".format(srcStrmFile))
             return False
         if event.is_directory:
             if not os.path.exists(srcStrmFile):
                 os.makedirs(srcStrmFile)
-                logger.info("{0}不存在，创建该目录".format(srcStrmFile))
+                logger.info("创建目录：{0}".format(srcStrmFile))
         else:
             filename, ext = os.path.splitext(srcStrmFile)
             if ext in self.lib.strm_ext:
@@ -105,7 +105,7 @@ class FileEventHandler(FileSystemEventHandler):
         srcStrmFile = self.getStrmPath(event.src_path)
         if event.is_directory:
             if not os.path.exists(srcStrmFile):
-                logger.info("{0}不存在，无须删除".format(srcStrmFile))
+                logger.info("不存在，跳过删除：{0}".format(srcStrmFile))
                 return False
             shutil.rmtree(srcStrmFile)
             logger.info("删除目录: {0}".format(srcStrmFile))

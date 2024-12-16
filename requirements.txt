@@ -5,3 +5,4 @@ python-crontab
 Croniter
 watchdog
 pytz
+rich

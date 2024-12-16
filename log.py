@@ -19,6 +19,7 @@ def getLogger(name: str, clear: bool = False, stream: bool = False, rotating: bo
     file_handler.setFormatter(DetailedFormatter())
     if stream:
         stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(DetailedFormatter())
         logger.addHandler(stream_handler)
     logger.addHandler(file_handler)
     return logger
