@@ -15,7 +15,10 @@ def getLogger(name: str, clear: bool = False, stream: bool = False, rotating: bo
     if clear:
         with open(logfile, mode='w', encoding='utf-8') as f:
             f.write('')
-    file_handler = RotatingFileHandler(filename=logfile, mode='a', encoding='utf-8', maxBytes=1048576, backupCount=5)
+    if rotating:
+        file_handler = RotatingFileHandler(filename=logfile, mode='a', encoding='utf-8', maxBytes=1048576, backupCount=5)
+    else:
+        file_handler = logging.FileHandler(filename=logfile, mode='a', encoding='utf-8')
     file_handler.setFormatter(DetailedFormatter())
     if stream:
         stream_handler = logging.StreamHandler()

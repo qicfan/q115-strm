@@ -1,65 +1,89 @@
-name: PyInstaller Windows
+name: PyInstaller
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
-    
-  pull_request:
-    branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+    branches:
+      - main
 
 jobs:
-  build-windows:
-    runs-on: windows-2019
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
+
+    env:
+      MAIN_PY_FILE: 'console.py'  # Define the path to your main.py file here
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v1
-      - name: Install Python
-        uses: actions/setup-python@v1
-        with:
-          python-version: '3.12'
-          architecture: 'x64'
-      - name: Install requirements and installer
-        run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
-      - name: Run pyinstaller
-        run: |
-          python -m PyInstaller console.spec
-      - uses: actions/upload-artifact@v4
-        with:
-          name: app
-          path: dist/
-      
-      - name: create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        with:
-          tag_name: ${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
-          body: |
-            Test Release
-          draft: false
-          prerelease: false
-          
-      # Since we have a directory, create a zip
-      - name: zip the artifect dir into a zip
-        run: |
-          powershell Compress-Archive D:\a\SWEN90013-Data-Platform-for-Biomaterial-Testing\SWEN90013-Data-Platform-for-Biomaterial-Testing\dist\ D:\a\SWEN90013-Data-Platform-for-Biomaterial-Testing\SWEN90013-Data-Platform-for-Biomaterial-Testing\dist\windowx-x86.zip
-      
-      - name: Upload release asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        with:
-           upload_url: ${{ steps.create_release.outputs.upload_url }}
-           asset_path: dist/windowx-x86.zip
-           asset_name: windowx-x86.zip
-           asset_content_type: application/zip
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.10.x
+
+    - name: Install Python dependencies
+      run: |
+        pip install -r requirements.txt
+      working-directory: ./
+
+    - name: Install PyInstaller
+      run: |
+        pip install pyinstaller
+      working-directory: ./
+
+    - name: Build executable
+      run: |
+        pyinstaller -F ${{ env.MAIN_PY_FILE }}
+      working-directory: ./
+
+    - name: Create Artifact (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows-executables
+        path: dist/
+
+    - name: Create Artifact (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux-executables
+        path: dist/
+
+    - name: Create Artifact (macOS)
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v3
+      with:
+        name: macos-executables
+        path: dist/
+
+    - name: List files in dist folder
+      run: ls -R ./dist/
+
+    # - name: create release
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+    #   with:
+    #     tag_name: ${{ github.run_number }}
+    #     release_name: Release ${{ github.run_number }}
+    #     body: |
+    #       Test Release
+    #     draft: false
+    #     prerelease: false
+  
+    # - name: Upload release asset
+    #   id: upload-release-asset
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #       GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+    #   with:
+    #       upload_url: ${{ steps.create_release.outputs.upload_url }}
+    #       asset_path: dist/windowx-x86.zip
+    #       asset_name: windowx-x86.zip
+    #       asset_content_type: application/zip

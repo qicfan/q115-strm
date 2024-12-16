@@ -10,7 +10,7 @@ from p115client import P115Client, tool
 from lib import OO5, GetNow, Lib, Libs, OO5List
 import os, logging, sys
 
-from log import DetailedFormatter, getLogger
+from log import getLogger
 
 LIBS = Libs()
 o5List = OO5List()
