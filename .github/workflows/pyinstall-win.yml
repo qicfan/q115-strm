@@ -1,0 +1,65 @@
+name: PyInstaller Windows
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+    
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-2019
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Install Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - name: Install requirements and installer
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+      - name: Run pyinstaller
+        run: |
+          python -m PyInstaller console.spec
+      - uses: actions/upload-artifact@v2
+        with:
+          name: app
+          path: dist/
+      
+      - name: create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          body: |
+            Test Release
+          draft: false
+          prerelease: false
+          
+      # Since we have a directory, create a zip
+      - name: zip the artifect dir into a zip
+        run: |
+          powershell Compress-Archive D:\a\SWEN90013-Data-Platform-for-Biomaterial-Testing\SWEN90013-Data-Platform-for-Biomaterial-Testing\dist\q115strm.exe D:\a\SWEN90013-Data-Platform-for-Biomaterial-Testing\SWEN90013-Data-Platform-for-Biomaterial-Testing\dist\windowx-x86.zip
+      
+      - name: Upload release asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+           upload_url: ${{ steps.create_release.outputs.upload_url }}
+           asset_path: dist/windowx-x86.zip
+           asset_name: windowx-x86.zip
+           asset_content_type: application/zip
