@@ -228,7 +228,6 @@ class Job:
             if self.lib.type == '本地路径':
                 strm_content = os.path.join(self.lib.path_of_115, path)
             else:
-                url = self.lib.webdav_url.replace('http://', '').replace('https://', '')
                 path = path.replace(os.sep, '/')
                 if self.lib.mount_path != '':
                     path.replace(self.lib.mount_path, '')
@@ -238,7 +237,20 @@ class Job:
                 newPath = []
                 for p in pathList:
                     newPath.append(urllib.parse.quote(p))
-                strm_content = 'http://{0}:{1}@{2}/{3}'.format(self.lib.webdav_username, self.lib.webdav_password, url, '/'.join(newPath))
+                if self.lib.type == 'WebDAV':
+                    url = self.lib.webdav_url
+                    if not url.startswith('http'):
+                        url = "http://{0}".format(url)
+                    url = self.lib.webdav_url.replace('//', '//{0}:{1}@'.format(self.lib.webdav_username, self.lib.webdav_password))
+                    if url.endswith('/'):
+                        url = url.rstrip('/')
+                    strm_content = '{0}/{1}'.format(url, '/'.join(newPath))
+                else:
+                    url = self.lib.alist_server
+                    if url.endswith('/'):
+                        url = url.rstrip('/')
+                    alist_115_path = self.lib.alist_115_path.strip('/')
+                    strm_content = '{0}/d/{1}/{2}'.format(url, alist_115_path, '/'.join(newPath))
             with open(strm_real_file, 'w', encoding='utf-8') as f:
                 f.write(strm_content)
             return ''

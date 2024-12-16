@@ -7,7 +7,9 @@
 - [x] STRM生成
 - [x] 元数据复制
 - [x] 支持源文件不存在时删除目标文件
-- [x] 支持webdav和本地挂载如CD2
+- [x] 支持CD2本地挂载，STRM内存放媒体文件的本地路径
+- [x] 支持WebDAV，STRM内存放WebDAV Url，可供播放器直接播放
+- [x] 支持Alist 302，STRM内存放Alist链接（http://ip:port/d/115/xxxxx.mkv)，配合emby2alist插件，客户端可播放115真实链接节省服务器流量(v0.3.2版本)
 - [x] 元数据增加软链接处理方式
 - [x] docker支持 + 简单的web ui (v0.2版本)
 - [x] docker版本增加监控文件变更，自动生成STRM，CD2 only (v0.2版本)

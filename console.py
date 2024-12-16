@@ -113,7 +113,7 @@ def create():
             rprint("[bold red]请输入正确的strm根目录[/]")
             return
     saveTmp()
-    lib.type = Prompt.ask("[green]type[/] 请选择STRM类型", choices=["本地路径", "WebDAV"], default=lib.type)
+    lib.type = Prompt.ask("[green]type[/] 请选择STRM类型", choices=["本地路径", "WebDAV", "alist302"], default=lib.type)
     saveTmp()
     lib.mount_path = Prompt.ask("[green]mount_path[/] 如果使用Alist请输入Alist创建存储时输入的根文件夹ID对应的路径", default=lib.mount_path)
     lib.mount_path = lib.mount_path.strip('/')
@@ -133,11 +133,11 @@ def create():
             lib.copy_delay = FloatPrompt.ask("[green]copy_delay[/] 每个元数据复制的间隔秒数，支持两位小数如：0.01, 默认1秒?", default=float(lib.copy_delay))
         saveTmp()
     if lib.type == 'WebDAV':
-        lib.webdav_url = Prompt.ask("[green]path_of_115[/] 请输入webdav服务中的115挂载路径, 不要包含http[s]://，格式：ip:port/[dav/115]", default=lib.webdav_url)
+        lib.webdav_url = Prompt.ask("[green]webdav_url[/] 请输入webdav服务中的115挂载路径, 格式：http[s]//ip:port/[dav/115]", default=lib.webdav_url)
         if (lib.webdav_url == ''):
             rprint("[bold red]webdav服务的url必须输入[/]")
             return
-        lib.webdav_url = lib.webdav_url.replace('http://', '').replace('https://', '').rstrip('/')
+        lib.webdav_url = lib.webdav_url.rstrip('/')
         saveTmp()
         lib.webdav_username = Prompt.ask("[green]webdav_username[/] 请输入webdav服务的登录用户名，只是用字母和数字不要包含特殊字符", default=lib.webdav_url)
         if (lib.webdav_username == ''):
@@ -148,6 +148,19 @@ def create():
         if (lib.webdav_password == ''):
             rprint("[bold red]webdav服务的登录密码必须输入[/]")
             return
+        saveTmp()
+    if lib.type == 'alist302':
+        lib.alist_server = Prompt.ask("[green]alist_server[/] 请输入alist地址, 格式：http[s]//ip:port", default=lib.alist_server)
+        if (lib.alist_server == ''):
+            rprint("[bold red]alist地址l必须输入[/]")
+            return
+        lib.alist_server = lib.alist_server.rstrip('/')
+        saveTmp()
+        lib.alist_115_path = Prompt.ask("[green]alist_115_path[/] 请输入alist存储中115的挂载路径", default=lib.alist_115_path)
+        if (lib.alist_115_path == ''):
+            rprint("[bold red]webdav服务的登录用户名必须输入[/]")
+            return
+        lib.alist_115_path = lib.alist_115_path.strip('/')
         saveTmp()
     strmExtStr = ';'.join(lib.strm_ext)
     newStrmExtStr = Prompt.ask("[green]strm_ext[/] 请输入要生成STRM的文件扩展名，分号分隔，可以直接复制默认值来修改", default=strmExtStr)

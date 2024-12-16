@@ -37,9 +37,11 @@ class LibBase:
     key: str # 标识
     name: str # 名称
     path: str # 路径
-    type: str # strm类型，'本地路径' | 'WebDAV'
+    type: str # strm类型，'本地路径' | 'WebDAV' | 'alist302'
     strm_root_path: str # strm根目录
     mount_path: str # alist挂载根文件夹，cd2留空
+    alist_server: str # alist服务器地址，格式：http[s]://ip:port
+    alist_115_path: str # alist中115路径，一般都是：115
     path_of_115: str # 115挂载根目录
     copy_meta_file: int # 元数据选项：1-关闭，2-复制，3-软链接
     copy_delay: int | float # 元数据复制间隔
@@ -61,6 +63,8 @@ class LibBase:
         self.type = data.get('type') if data.get('type') is not None else '本地路径'
         self.strm_root_path = data.get('strm_root_path') if data.get('strm_root_path') is not None else ''
         self.mount_path = data.get('mount_path') if data.get('mount_path') is not None else ''
+        self.alist_server = data.get('alist_server') if data.get('alist_server') is not None else ''
+        self.alist_115_path = data.get('alist_115_path') if data.get('alist_115_path') is not None else ''
         self.path_of_115 = data.get('path_of_115') if data.get('path_of_115') is not None else ''
         self.copy_meta_file = data.get('copy_meta_file') if data.get('copy_meta_file') is not None else '关闭'
         self.copy_delay = data.get('copy_delay') if data.get('copy_delay') is not None else 1
