@@ -3,6 +3,8 @@
 ## 介绍
 ##### 基于[p115client](https://github.com/ChenyangGao/p115client)开发，通过生成115目录树来快速完成STRM文件创建，由于只有一次请求所以不会触发风控
 
+#### 如果docker部署后一直重新启动或者无法访问web ui，可能是权限问题导致，请在映射的/app/data目录内手动创建logs和config两个文件夹
+
 ## TODO
 - [x] STRM生成
 - [x] 元数据复制
