@@ -3,6 +3,11 @@ import json
 import os
 import sys
 
+if not os.path.exists('./data/logs'):
+    os.makedirs('./data/logs')
+if not os.path.exists('./data/config'):
+    os.makedirs('./data/config')
+
 from job import StartJob
 from lib import OO5, Lib, Libs, OO5List
 from rich import print as rprint
