@@ -8,3 +8,5 @@ poetry.lock
 /data/config/*
 __pycache__
 .input
+a.json
+rmstrm.py

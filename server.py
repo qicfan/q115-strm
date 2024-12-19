@@ -150,8 +150,8 @@ def index():
 def assets(filename):
     return app.send_static_file('assets/%s' % filename)
 
-def StartServer():
-    app.run(host="0.0.0.0", port=12123)
+def StartServer(host: str = '0.0.0.0'):
+    app.run(host, port=12123)
 
 if __name__ == '__main__':
-    StartServer()
+    StartServer(host='127.0.0.1')

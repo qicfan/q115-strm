@@ -51,7 +51,7 @@ class FileEventHandler(FileSystemEventHandler):
             # if not os.path.exists(destStrmPath):
             #     shutil.move(srcStrmPath, destStrmPath)
             #     logger.info("移动：{0} => {1}".format(srcStrmPath, destStrmPath))
-            logger.warning("不处理文件移动，因为需要修改STRM文件内的路径 {0} => {1}".format(srcStrmPath, destStrmPath))
+            logger.warning("不处理目录移动，因为需要修改STRM文件内的路径 {0} => {1}".format(srcStrmPath, destStrmPath))
             pass
         else:
             # 检查是否STRM文件
@@ -138,7 +138,10 @@ def watch(key: str):
     signal.signal(signal.SIGTERM, stop)
     try:
         eventHandler = FileEventHandler(key)
-        observer.schedule(eventHandler,os.path.join(eventHandler.lib.path_of_115, eventHandler.lib.path), recursive=True) # 指定监控路径/触发对应的监控事件类
+        if eventHandler.lib.cloud_type == '115':
+            observer.schedule(eventHandler,os.path.join(eventHandler.lib.path_of_115, eventHandler.lib.path), recursive=True) # 指定监控路径/触发对应的监控事件类
+        else:
+            observer.schedule(eventHandler,os.path.join(eventHandler.lib.path), recursive=True) # 指定监控路径/触发对应的监控事件类
         observer.start()# 将observer运行在同一个线程之内,不阻塞主进程运行,可以调度observer来停止该线程
         try:
             while True:
@@ -151,7 +154,7 @@ def watch(key: str):
                 #         p1 = Process(target=StarJob, kwargs={'key': eventHandler.lib.key})
                 #         p1.start()
                 #         p1.join()
-                time.sleep(1) # 监控频率（1s1次，根据自己的需求进行监控）
+                time.sleep(10)
         except KeyboardInterrupt:
             observer.stop()
         observer.join()

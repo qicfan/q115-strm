@@ -35,6 +35,7 @@ class LibExtra:
 
 class LibBase:
     key: str # 标识
+    cloud_type: str # 网盘类型，分为：115, other
     name: str # 名称
     path: str # 路径
     type: str # strm类型，'本地路径' | 'WebDAV' | 'alist302'
@@ -58,6 +59,7 @@ class LibBase:
         if data is None:
             return
         self.key = data.get('key') if data.get('key') is not None else ''
+        self.cloud_type = data.get('cloud_type') if data.get('cloud_type') is not None else '115' # 默认115
         self.name = data.get('name') if data.get('name') is not None else ''
         self.path = data.get('path') if data.get('path') is not None else ''
         self.type = data.get('type') if data.get('type') is not None else '本地路径'
@@ -136,9 +138,11 @@ class Lib(LibBase):
         # 验证STRM根目录是否存在
         if not os.path.exists(self.strm_root_path):
             return False, 'STRM根目录不存在，请检查文件系统中是否存在该目录：%s' % self.strm_root_path
-        # 验证115挂在根目录是否存在
+        # 验证115挂载根目录是否存在
         if self.path_of_115 != '' and not os.path.exists(self.path_of_115):
             return False, '115挂载根目录不存在，请检查文件系统中是否存在该目录：%s' % self.path_of_115
+        if self.cloud_type == 'other' and not os.path.exists(self.path):
+            return False, '同步路径不存在，请检查文件系统中是否存在该目录：%s' % self.path
         return True, ''
 
     def cron(self):
