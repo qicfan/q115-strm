@@ -14,6 +14,6 @@ RUN chmod -R 0755 /app/frontend/*
 
 RUN pip install -r requirements.txt
 
-VOLUME ["/app/data", "/115", "/CloudNAS/115"]
+VOLUME ["/app/data"]
 
 ENTRYPOINT ["python", "main.py"]
