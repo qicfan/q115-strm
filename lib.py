@@ -69,7 +69,7 @@ class LibBase:
         self.alist_115_path = data.get('alist_115_path') if data.get('alist_115_path') is not None else ''
         self.path_of_115 = data.get('path_of_115') if data.get('path_of_115') is not None else ''
         self.copy_meta_file = data.get('copy_meta_file') if data.get('copy_meta_file') is not None else '关闭'
-        self.copy_delay = data.get('copy_delay') if data.get('copy_delay') is not None else 1
+        self.copy_delay = float(data.get('copy_delay')) if data.get('copy_delay') is not None else 1
         self.webdav_url = data.get('webdav_url') if data.get('webdav_url') is not None else ''
         self.webdav_username = data.get('webdav_username') if data.get('webdav_username') is not None else ''
         self.webdav_password = data.get('webdav_password') if data.get('webdav_password') is not None else ''

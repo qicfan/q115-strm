@@ -148,7 +148,7 @@ class Job:
                 cf = 0
                 for item in copy_list:
                     c += 1
-                    src_file = os.path.join(self.lib.path_of_115, item)
+                    src_file = os.path.join(self.lib.path, item)
                     dest_file = os.path.join(self.lib.strm_root_path, item)
                     dirname = os.path.dirname(dest_file)
                     if not os.path.exists(dirname):
@@ -159,9 +159,9 @@ class Job:
                         continue
                     try:
                         if self.lib.copy_meta_file == '复制':
-                            self.logger.info('[%d / %d] 元数据 - 复制：%s' % (c, ct, item))
+                            self.logger.info('[%d / %d] 元数据 - 复制：%s => %s' % (c, ct, src_file, dest_file))
                             shutil.copy(src_file, dest_file)
-                            time.sleep(1)
+                            time.sleep(self.lib.copy_delay)
                         if self.lib.copy_meta_file == '软链接':
                             self.logger.info('[%d / %d] 元数据 - 软链：%s' % (c, ct, item))
                             os.symlink(src_file, dest_file)
@@ -169,7 +169,6 @@ class Job:
                     except OSError as e:
                         self.logger.error('[%d / %d] 元数据 - 复制错误：%s \n %s' % (c, ct, item, e))
                         cf += 1
-                    time.sleep(self.lib.copy_delay)
                 self.logger.info('元数据结果：成功: {0}, 失败: {1}, 总共: {2}'.format(cs, cf, ct))
                 self.lib.extra.last_sync_result['meta'] = [cs, ct]
         self.logger.info('删除结果：成功: {0}, 失败: {1}, 总共: {2}'.format(ds, df, dt))
@@ -269,7 +268,7 @@ class Job:
                         if self.lib.copy_meta_file == '复制':
                             self.logger.info('[%d / %d] 元数据 - 复制：%s' % (c, ct, item))
                             shutil.copy(src_file, dest_file)
-                            time.sleep(1)
+                            time.sleep(self.lib.copy_delay)
                         if self.lib.copy_meta_file == '软链接':
                             self.logger.info('[%d / %d] 元数据 - 软链：%s' % (c, ct, item))
                             os.symlink(src_file, dest_file)
@@ -277,7 +276,6 @@ class Job:
                     except OSError as e:
                         self.logger.error('[%d / %d] 元数据 - 复制错误：%s \n %s' % (c, ct, item, e))
                         cf += 1
-                    time.sleep(self.lib.copy_delay)
                 self.logger.info('元数据结果：成功: {0}, 失败: {1}, 总共: {2}'.format(cs, cf, ct))
                 self.lib.extra.last_sync_result['meta'] = [cs, ct]
         self.logger.info('删除结果：成功: {0}, 失败: {1}, 总共: {2}'.format(ds, df, dt))
