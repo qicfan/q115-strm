@@ -25,7 +25,10 @@ class FileEventHandler(FileSystemEventHandler):
     
     def getStrmPath(self, path):
         # 返回目标位置路径
-        newPath: str = path.replace(self.lib.path_of_115, '')
+        if self.lib.cloud_type == '115':
+            newPath: str = path.replace(self.lib.path_of_115, '')
+        else:
+            newPath: str = path.replace(self.path, '')
         newPath = newPath.lstrip(os.sep)
         return os.path.join(self.lib.strm_root_path, newPath)
 
