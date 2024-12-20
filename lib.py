@@ -4,7 +4,11 @@ import hashlib, os
 from typing import List, Mapping
 from crontab import CronTab
 import telebot
-
+from telebot import apihelper
+from telebot import apihelper
+proxyHost = os.getenv('PROXY_HOST', '')
+if proxyHost != '':
+    apihelper.proxy = {'http': proxyHost, 'https': proxyHost}
 TABFILE = os.path.abspath('./data/config/cron.tab')
 
 def GetNow():

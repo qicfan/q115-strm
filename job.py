@@ -14,7 +14,10 @@ import os, logging, sys
 from telegramify_markdown import customize
 
 from log import getLogger
-
+from telebot import apihelper
+proxyHost = os.getenv('PROXY_HOST', '')
+if proxyHost != '':
+    apihelper.proxy = {'http': proxyHost, 'https': proxyHost}
 LIBS = Libs()
 o5List = OO5List()
 

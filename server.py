@@ -6,6 +6,10 @@ from flask_restful import Resource, Api, request
 from flask_httpauth import HTTPBasicAuth
 from job import StartJob
 from lib import Libs, Lib, OO5List, Setting, TGBot
+from telebot import apihelper
+proxyHost = os.getenv('PROXY_HOST', '')
+if proxyHost != '':
+    apihelper.proxy = {'http': proxyHost, 'https': proxyHost}
 
 LIBS = Libs()
 o5List = OO5List()
