@@ -384,13 +384,11 @@ def StartJob(key: str, logStream: bool = False):
     job.start()
 
 if __name__ == '__main__':
-    ### TEST ###
-    with open('./a.json', mode='r', encoding='utf-8') as f:
-        dict = json.load(f)
-    lib = Lib(dict)
-    job = Job()
-    job.key = lib.key
-    job.logger = getLogger(name = lib.key, clear=True, stream=True)
-    job.lib = lib
-    job.oo5Account = o5List.get(lib.id_of_115)
-    job.start()
+    key: str = ''
+    parser = argparse.ArgumentParser(prog='115-STRM', description='将挂载的115网盘目录生成STRM', formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-k', '--key', help='要处理的同步目录')
+    args, unknown = parser.parse_known_args()
+    if args.key != None:
+        key = args.key
+    if key == '':
+        sys.exit(0)
