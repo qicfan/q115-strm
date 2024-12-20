@@ -44,7 +44,7 @@ q115strm.exe run -k=xxx
    ```bash
    docker run -d \
      --name q115strm \
-     -e TZ="Asia/Shanghai"
+     -e TZ="Asia/Shanghai" \
      -v /vol1/1000/docker/q115strm/data:/app/data \
      -v /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115:shared \
      -v /vol1/1000/视频/网盘/115:/115 \
