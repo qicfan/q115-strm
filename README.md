@@ -18,6 +18,8 @@
     - 目录3每天0点10分执行：10 0 * * *
 1. 监控变更依赖于CD2的会员功能，请确保使用CD2并且开通了会员
 1. alist302方式要求emby/jellyfin + emby2alist配合，否则无法直接播放
+1. 如果配置电报通知并且服务器在国内，需要配置代理，docke添加环境变量PROXY_HOST=http://ip:port
+1. 如果需要编程触发任务执行，请调用：http://ip:port/api/job/{path}，path参数指添加同步目录时的同步路径字段的值
 
 ## TODO
 - [x] STRM生成
@@ -59,7 +61,7 @@ q115strm.exe run -k=xxx
    ```bash
    docker run -d \
      --name q115strm \
-     -e TZ="Asia/Shanghai" \
+     -e "TZ=Asia/Shanghai" \
      -v /vol1/1000/docker/q115strm/data:/app/data \
      -v /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115:shared \
      -v /vol1/1000/视频/网盘/115:/115 \
@@ -76,7 +78,7 @@ services:
     image: qicfan/115strm
     container_name: q115strm
     environment:
-      - 'TZ=Asia/Shanghai'
+      - TZ=Asia/Shanghai
     ports:
       - target: 12123
         published: 12123
@@ -95,7 +97,8 @@ services:
 - `-v /vol1/1000/视频/网盘/115:/115` 存放STRM文件的根目录，必须存在这个映射
 - `-p 12123:12123`: 映射12123端口，一个简易的web ui。
 - `--restart unless-stopped` 设置容器在退出时自动重启。
-- `-e TZ="Asia/Shanghai"` 时区变量，可以根据所在地设置；会影响记录的任务执行时间，定时执行任务的时间
+- `-e "TZ=Asia/Shanghai"` 时区变量，可以根据所在地设置；会影响记录的任务执行时间，定时执行任务的时间
+- `-e "PROXY_HOST=http://192.168.1.1:10808"` 
 
 ## 关键词解释：
 - 同步路径：115网盘中的目录，跟alist无关，请到115网盘app或者浏览器中查看实际的目录，多个目录用 / 分隔，比如：Media/电影/华语电影
