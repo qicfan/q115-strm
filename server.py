@@ -3,14 +3,16 @@ import os
 import signal
 from flask import Flask
 from flask_restful import Resource, Api, request
+from flask_httpauth import HTTPBasicAuth
 from job import StartJob
-from lib import Libs, Lib, OO5List
+from lib import Libs, Lib, OO5List, Setting, TGBot
 
 LIBS = Libs()
 o5List = OO5List()
 
 app = Flask(__name__, static_folder="frontend")
 api = Api(app=app)
+auth = HTTPBasicAuth()
 
 class Libs(Resource):
     def get(self):
@@ -69,10 +71,12 @@ class LibStop(Resource):
         if lib is None:
             return {'code': 404, 'msg': '同步目录不存在', 'data': {}}
         if lib.extra.pid > 0:
-            return {'code': 200, 'msg': '该同步任务已结束', 'data': {}}
-        os.kill(lib.extra.pid, signal.SIGKILL)
+            try:
+                os.kill(lib.extra.pid, signal.SIGILL)
+                lib.extra.status = 3
+            except:
+                lib.extra.status = 1
         lib.extra.pid = 0
-        lib.extra.status = 3
         LIBS.saveExtra(lib)
         return {'code': 200, 'msg': '已停止', 'data': {}}
 
@@ -86,7 +90,6 @@ class LibLog(Resource):
             content = logfd.read()
         content = content.replace("\n", "<br />")
         return {'code': 200, 'msg': '', 'data': content}
-
 
 class OO5List(Resource):
     def get(self):
@@ -125,6 +128,41 @@ class OO5(Resource):
             return {'code': 500, 'msg': msg, 'data': {}}
         return {'code': 200, 'msg': '', 'data': {}}
 
+class JobApi(Resource):
+    def get(self, path: str):
+        lib = LIBS.getByPath(path)
+        if lib is None:
+            return {'code': 404, 'msg': '同步目录不存在', 'data': {}}
+        if lib.extra.pid > 0:
+            return {'code': 500, 'msg': '该目录正在同步中...', 'data': {}}
+        p1 = Process(target=StartJob, kwargs={'key': lib.key})
+        p1.start()
+        return {'code': 200, 'msg': '已启动任务，可调用API查询状态：/api/lib/{0}'.format(lib.key), 'data': {}}
+
+class SettingApi(Resource):
+    def get(self):
+        settings = Setting()
+        return {'code': 200, 'msg': '', 'data': settings.__dict__}
+
+    def post(self):
+        data = request.get_json()
+        settings = Setting()
+        settings.username = data.get("username")
+        settings.password = data.get("password")
+        settings.telegram_bot_token = data.get("telegram_bot_token")
+        settings.telegram_user_id = data.get("telegram_user_id")
+        if settings.username == '' or settings.password == '':
+            return {'code': 500, 'msg': "用户名密码不能为空", 'data': {}}
+        settings.save()
+        if settings.telegram_bot_token != "" and settings.telegram_user_id != "":
+            # 发送测试消息
+            bot = TGBot()
+            rs, msg = bot.sendMsg("通知配置成功，稍后您将在此收到运行通知")
+            if not rs:
+                return {'code': 500, 'msg': '保存成功，但是Telegram通知配置出错：{0}'.format(msg), 'data': settings.__dict__}
+        return {'code': 200, 'msg': '', 'data': settings.__dict__}
+
+        
 api.add_resource(Libs, '/api/libs')
 api.add_resource(Lib, '/api/lib/<key>')
 api.add_resource(LibSync, '/api/lib/sync/<key>')
@@ -132,6 +170,8 @@ api.add_resource(LibStop, '/api/lib/stop/<key>')
 api.add_resource(LibLog, '/api/lib/log/<key>')
 api.add_resource(OO5List, '/api/oo5list')
 api.add_resource(OO5, '/api/oo5/<key>')
+api.add_resource(JobApi, '/api/job/<path>')
+api.add_resource(SettingApi, '/api/settings')
 
 # 跨域支持
 def after_request(resp):
@@ -142,7 +182,16 @@ def after_request(resp):
 
 app.after_request(after_request)
 
+@auth.verify_password
+def verify_password(username, password):
+    setting = Setting()
+    # 验证用户名和密码的逻辑
+    if username == setting.username and password == setting.password:
+        return True
+    return False
+
 @app.route('/')
+@auth.login_required
 def index():
     return app.send_static_file('index.html')
 
@@ -151,6 +200,7 @@ def assets(filename):
     return app.send_static_file('assets/%s' % filename)
 
 def StartServer(host: str = '0.0.0.0'):
+    # 启动一个线程，处理同步任务
     app.run(host, port=12123)
 
 if __name__ == '__main__':

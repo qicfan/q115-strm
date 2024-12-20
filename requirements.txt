@@ -1,8 +1,11 @@
 p115client
 flask
 flask_restful
+flask_httpauth
 python-crontab
 Croniter
 watchdog
 pytz
 rich
+pyTelegramBotAPI
+telegramify-markdown

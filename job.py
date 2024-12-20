@@ -1,15 +1,17 @@
 
 import argparse
-import json
 import shutil
 import signal
+import textwrap
 import time
 import urllib
 import urllib.parse
 
 from p115client import P115Client, tool
-from lib import OO5, GetNow, Lib, Libs, OO5List
+import telegramify_markdown
+from lib import OO5, GetNow, Lib, Libs, OO5List, TGBot
 import os, logging, sys
+from telegramify_markdown import customize
 
 from log import getLogger
 
@@ -50,6 +52,15 @@ class Job:
         self.lib.extra.status = 2
         # 保存
         LIBS.saveExtra(self.lib)
+        bot = TGBot()
+        rs, msg = bot.sendMsg("{0} 开始同步".format(self.lib.name))
+        if rs:
+            lm = "成功发送开始同步通知"
+            if msg != "":
+                lm = "无法发送通知：{0}".format(msg)
+            self.logger.info(lm)
+        else:
+            self.logger.warning("无法发送通知: {0}".format(msg))
         self.lib = LIBS.getLib(self.key)
         try:
             if self.lib.cloud_type == '115':
@@ -57,9 +68,35 @@ class Job:
             else:
                 self.workOther()
             self.lib.extra.status = 1
+            customize.strict_markdown = False
+            tgmesage = """
+*{0}* 已完成同步
+
+- *STRM文件*: 本次找到 {1} 个， 生成 {2} 个
+- *元数据*: 本次找到 {3} 个, 成功 {4} 个
+- *删除文件*: 本次找到 {5} 个，成功 {6} 个
+"""
+            markdown_text = textwrap.dedent(tgmesage.format(self.lib.name, self.lib.extra.last_sync_result['strm'][1], self.lib.extra.last_sync_result['strm'][0], self.lib.extra.last_sync_result['meta'][0], self.lib.extra.last_sync_result['meta'][0], self.lib.extra.last_sync_result['delete'][0], self.lib.extra.last_sync_result['delete'][0]))
+            can_be_sent = telegramify_markdown.markdownify(markdown_text)
+            rs, msg = bot.sendMsg(can_be_sent)
+            if rs:
+                lm = "成功发送同步完成通知"
+                if msg != "":
+                    lm = "无法发送通知：{0}".format(msg)
+                self.logger.info(lm)
+            else:
+                self.logger.warning("无法发送通知: {0}".format(msg))
         except Exception as e:
             self.logger.error('%s' % e)
             self.lib.extra.status = 3
+            rs, msg = bot.sendMsg("{0} 同步发生错误： \n {1}".format(self.lib.name, e))
+            if rs:
+                lm = "成功发送同步错误通知"
+                if msg != "":
+                    lm = "无法发送通知：{0}".format(msg)
+                self.logger.info(lm)
+            else:
+                self.logger.warning("无法发送通知: {0}".format(msg))
         self.lib.extra.pid = 0
         LIBS.saveExtra(self.lib)
         return True
@@ -392,3 +429,4 @@ if __name__ == '__main__':
         key = args.key
     if key == '':
         sys.exit(0)
+    StartJob(key)

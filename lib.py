@@ -3,6 +3,7 @@ import json
 import hashlib, os
 from typing import List, Mapping
 from crontab import CronTab
+import telebot
 
 TABFILE = os.path.abspath('./data/config/cron.tab')
 
@@ -213,6 +214,14 @@ class Libs:
         self.loadFromFile()
         return self.libList.get(key)
     
+    def getByPath(self, path: str) -> Lib | None:
+        self.loadFromFile()
+        for key in self.libList:
+            item = self.libList.get(key)
+            if item.path == path:
+                return item
+        return None
+    
     def add(self, data: dict) -> tuple[bool, str]:
         for k, v in self.libList.items():
             if v.path == data['path']:
@@ -371,6 +380,59 @@ class OO5List:
         del self.list[key]
         self.save()
         return True, ''
+
+class Setting:
+    username: str = "admin"
+    password: str = "admin"
+    telegram_bot_token: str = ""
+    telegram_user_id: str = ""
+
+    def __init__(self):
+        self.loadFromFile()
+
+    def loadFromFile(self):
+        if not os.path.exists("./data/config/setting.json"):
+            return False
+        try:
+            with open("./data/config/setting.json", mode='r', encoding='utf-8') as fd:
+                jsonSetting: dict = json.load(fd)
+            self.username = jsonSetting.get("username")
+            self.password = jsonSetting.get("password")
+            self.telegram_bot_token = jsonSetting.get("telegram_bot_token")
+            self.telegram_user_id = jsonSetting.get("telegram_user_id")
+        except:
+            return False
+        return True
+    
+    def save(self) -> tuple[bool, str]:
+        try:
+            with open('./data/config/setting.json', mode='w', encoding='utf-8') as f:
+                json.dump(self.__dict__, f)
+        except Exception as e:
+            return False, e
+        return True, ""
+    
+class TGBot:
+    bot = None | telebot.TeleBot
+
+    def __init__(self):
+        setting = Setting()
+        if setting.telegram_bot_token != "":
+            self.bot = telebot.TeleBot(setting.telegram_bot_token)
+
+    def sendMsg(self, msg: str, parse_mode: str = "MarkdownV2") -> tuple[bool, str]:
+        if self.bot is None:
+            return True, "没有配置机器人"
+        setting = Setting()
+        if setting.telegram_user_id == "":
+            return True, "没有配置用户ID"
+        try:
+            self.bot.send_message(setting.telegram_user_id, msg, parse_mode)
+            return True, ""
+        except Exception as e:
+            return False, e
+
+
 
 if __name__ == '__main__':
     # with open('./data/config/libs.json', mode='r', encoding='utf-8') as fd_libs:
