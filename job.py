@@ -9,7 +9,7 @@ import urllib.parse
 
 from p115client import P115Client, tool
 import telegramify_markdown
-from lib import OO5, GetNow, Lib, Libs, OO5List, TGBot
+from lib import OO5, GetNow, Lib, Libs, OO5List, Setting, TGBot
 import os, logging, sys
 from telegramify_markdown import customize
 
@@ -47,6 +47,22 @@ class Job:
             self.logger.error('正在同步中，跳过本次执行')
             raise ValueError('正在同步中，跳过本次执行')
 
+    def notify(self, msg):
+        settings = Setting()
+        if settings.telegram_bot_token == '' or settings.telegram_user_id == '':
+            return
+        bot = TGBot()
+        markdown_text = textwrap.dedent(msg)
+        can_be_sent = telegramify_markdown.markdownify(markdown_text)
+        rs, msg = bot.sendMsg(can_be_sent)
+        if rs:
+            lm = "成功发送通知"
+            if msg != "":
+                lm = "无法发送通知：{0}".format(msg)
+            self.logger.info(lm)
+        else:
+            self.logger.warning("无法发送通知: {0}".format(msg))
+
     def start(self):
         # 记录开始时间
         # 记录进程号
@@ -55,21 +71,10 @@ class Job:
         self.lib.extra.status = 2
         # 保存
         LIBS.saveExtra(self.lib)
-        bot = TGBot()
-        rs, msg = bot.sendMsg("{0} 开始同步".format(self.lib.name))
-        if rs:
-            lm = "成功发送开始同步通知"
-            if msg != "":
-                lm = "无法发送通知：{0}".format(msg)
-            self.logger.info(lm)
-        else:
-            self.logger.warning("无法发送通知: {0}".format(msg))
+        self.notify("*{0}* 开始同步".format(self.lib.name))
         self.lib = LIBS.getLib(self.key)
         try:
-            if self.lib.cloud_type == '115':
-                self.work()
-            else:
-                self.workOther()
+            self.work()
             self.lib.extra.status = 1
             customize.strict_markdown = False
             tgmesage = """
@@ -79,27 +84,13 @@ class Job:
 - *元数据*: 本次找到 {3} 个, 成功 {4} 个
 - *删除文件*: 本次找到 {5} 个，成功 {6} 个
 """
-            markdown_text = textwrap.dedent(tgmesage.format(self.lib.name, self.lib.extra.last_sync_result['strm'][1], self.lib.extra.last_sync_result['strm'][0], self.lib.extra.last_sync_result['meta'][0], self.lib.extra.last_sync_result['meta'][0], self.lib.extra.last_sync_result['delete'][0], self.lib.extra.last_sync_result['delete'][0]))
-            can_be_sent = telegramify_markdown.markdownify(markdown_text)
-            rs, msg = bot.sendMsg(can_be_sent)
-            if rs:
-                lm = "成功发送同步完成通知"
-                if msg != "":
-                    lm = "无法发送通知：{0}".format(msg)
-                self.logger.info(lm)
-            else:
-                self.logger.warning("无法发送通知: {0}".format(msg))
+
+            tgmessage = tgmesage.format(self.lib.name, self.lib.extra.last_sync_result['strm'][1], self.lib.extra.last_sync_result['strm'][0], self.lib.extra.last_sync_result['meta'][0], self.lib.extra.last_sync_result['meta'][0], self.lib.extra.last_sync_result['delete'][0], self.lib.extra.last_sync_result['delete'][0])
+            self.notify(tgmessage)
         except Exception as e:
             self.logger.error('%s' % e)
             self.lib.extra.status = 3
-            rs, msg = bot.sendMsg("{0} 同步发生错误： \n {1}".format(self.lib.name, e))
-            if rs:
-                lm = "成功发送同步错误通知"
-                if msg != "":
-                    lm = "无法发送通知：{0}".format(msg)
-                self.logger.info(lm)
-            else:
-                self.logger.warning("无法发送通知: {0}".format(msg))
+            self.notify("*{0}* 同步发生错误： {1}".format(self.lib.name, e))
         self.lib.extra.pid = 0
         LIBS.saveExtra(self.lib)
         return True
@@ -109,11 +100,9 @@ class Job:
         self.lib.extra.pid = 0
         LIBS.saveExtra(self.lib)
         sys.exit(1)
-
-    def workOther(self):
+    
+    def parseTree(self, src_tree_list: list, dest_tree_list: list) -> tuple[list, list, list]:
         copy_list = []
-        src_tree_list = self.get_dest_tree_list(self.lib.path, self.lib.path, [])
-        dest_tree_list = self.get_dest_tree_list(self.lib.strm_root_path, self.lib.strm_root_path, [])
         added = []
         for src_item in src_tree_list:
             if src_item in dest_tree_list:
@@ -121,7 +110,7 @@ class Job:
                 dest_tree_list.remove(src_item)
                 continue
             filename, ext = os.path.splitext(src_item)
-            if ext in self.lib.strm_ext:
+            if ext.lower() in self.lib.strm_ext:
                 strm_file = filename + '.strm'
                 if strm_file in dest_tree_list:
                     # 如果strm文件已存在，则从dest中删除
@@ -130,39 +119,12 @@ class Job:
                 else:
                     added.append(src_item)
                     continue
-            if ext in self.lib.meta_ext:
+            if ext.lower() in self.lib.meta_ext:
                 # 如果是元数据，则加入复制列表
                 copy_list.append(src_item)
-            
-        # added是要添加的, dest_tree_list剩下的是要删除的， copy_list是要复制的元数据
-        # 处理删除
-        c = 0
-        dt = len(dest_tree_list)
-        ds = 0
-        df = 0
-        for delete_item in dest_tree_list:
-            c += 1
-            delete_real_dir = os.path.join(self.lib.strm_root_path, delete_item)
-            if os.path.exists(delete_real_dir):
-                # 只删除strm文件
-                _, deleted_ext = os.path.splitext(delete_item)
-                if deleted_ext != '.strm':
-                    self.logger.error('[%d / %d] 错误：%s \n %s' % (c, dt, delete_item, '只会删除STRM文件'))
-                    df += 1
-                    continue
-                try:
-                    os.unlink(delete_real_dir)
-                    self.logger.info('[%d / %d] 删除：%s' % (c, dt, delete_item))
-                    ds += 1
-                except OSError as e:
-                    self.logger.error('[%d / %d] 错误：%s \n %s' % (c, dt, delete_item, e))
-                    df += 1
-            else:
-                self.logger.error('[%d / %d] 错误：%s \n %s' % (c, dt, delete_item, '文件已经不存在'))
-                df += 1
-                continue
+        return dest_tree_list, added, copy_list
 
-        # 处理添加
+    def doAdded(self, added):
         c = 0
         at = len(added)
         asuc = 0
@@ -177,151 +139,128 @@ class Job:
             else:
                 af += 1
                 self.logger.error('[%d / %d] 错误：%s \n %s' % (c, at, item, rs))
-        # 处理元数据
+        self.lib.extra.last_sync_result['strm'] = [asuc, at]
+        return True
+
+    def doDelete(self, dest_tree_list):
+        c = 0
+        dt = len(dest_tree_list)
+        ds = 0
+        df = 0
+        for delete_item in dest_tree_list:
+            c += 1
+            delete_real_file = os.path.join(self.lib.strm_root_path, delete_item)
+            delete_real_path = os.path.dirname(delete_real_file)
+            if not os.path.exists(delete_real_file):
+                self.logger.error('[%d / %d] %s \n %s' % (c, dt, delete_item, '文件已经删除'))
+                ds += 1
+                continue
+            if os.path.isdir(delete_real_file):
+                # 文件夹直接删除
+                shutil.rmtree(delete_real_file)
+                self.logger.info('[%d / %d] 删除网盘不存在的文件夹：%s' % (c, dt, delete_real_file))
+                ds += 1
+                continue
+            # 处理文件，只删除strm文件
+            _, deleted_ext = os.path.splitext(delete_item)
+            if deleted_ext != '.strm':
+                self.logger.error('[%d / %d] 错误：网盘不存在该文件，疑似本地刮削产物： %s' % (c, dt, delete_item))
+                df += 1
+            else:
+                try:
+                    os.unlink(delete_real_file)
+                    self.logger.info('[%d / %d] 删除网盘不存在的文件：%s' % (c, dt, delete_item))
+                    ds += 1
+                except OSError as e:
+                    self.logger.error('[%d / %d] 错误：%s \n %s' % (c, dt, delete_item, e))
+                    df += 1
+            # 检查目录是否为空，如果为空，则删除目录
+            dirs = os.listdir(delete_real_path)
+            c = len(dirs)
+            if c == 0:
+                # 该目录为空，则删除该目录
+                os.remove(delete_real_path)
+                self.logger.info('[%d / %d] 删除空文件夹：%s' % (c, dt, delete_real_path))
+            else:
+                # 检查目录下是否有strm文件或者其他文件夹
+                can_delete = True
+                for d in dirs:
+                    item = os.path.join(delete_real_path, d)
+                    if os.path.isdir(item):
+                        can_delete = False
+                        break
+                    _, ext = os.path.splitext(item)
+                    if ext.lower() == '.strm':
+                        can_delete = False
+                        break
+                if can_delete == True:
+                    # 删除没有strm和子文件夹的目录
+                    shutil.rmtree(delete_real_path)
+                    self.logger.info('[%d / %d] 删除没有STRM的文件夹：%s' % (c, dt, delete_real_path))
+
+        self.lib.extra.last_sync_result['delete'] = [ds, dt]
+
+    def doMeta(self, copy_list: list):
         if self.lib.type == 'WebDAV':
             self.logger.info('webdav不处理元数据')
-        else:
-            if self.lib.copy_meta_file != '关闭':
-                c = 0
-                ct = len(copy_list)
-                cs = 0
-                cf = 0
-                for item in copy_list:
-                    c += 1
-                    src_file = os.path.join(self.lib.path, item)
-                    dest_file = os.path.join(self.lib.strm_root_path, item)
-                    dirname = os.path.dirname(dest_file)
-                    if not os.path.exists(dirname):
-                        os.makedirs(dirname)
-                    if not os.path.exists(src_file):
-                        cf += 1
-                        self.logger.error('[%d / %d] 元数据 - 源文件不存在：%s' % (c, ct, src_file))
-                        continue
-                    try:
-                        if self.lib.copy_meta_file == '复制':
-                            self.logger.info('[%d / %d] 元数据 - 复制：%s => %s' % (c, ct, src_file, dest_file))
-                            shutil.copy(src_file, dest_file)
-                            time.sleep(self.lib.copy_delay)
-                        if self.lib.copy_meta_file == '软链接':
-                            self.logger.info('[%d / %d] 元数据 - 软链：%s' % (c, ct, item))
-                            os.symlink(src_file, dest_file)
-                        cs += 1
-                    except OSError as e:
-                        self.logger.error('[%d / %d] 元数据 - 复制错误：%s \n %s' % (c, ct, item, e))
-                        cf += 1
-                self.logger.info('元数据结果：成功: {0}, 失败: {1}, 总共: {2}'.format(cs, cf, ct))
-                self.lib.extra.last_sync_result['meta'] = [cs, ct]
-        self.logger.info('删除结果：成功: {0}, 失败: {1}, 总共: {2}'.format(ds, df, dt))
-        self.logger.info('STRM结果：成功: {0}, 失败: {1}, 总共: {2}'.format(asuc, af, at))
-        self.lib.extra.last_sync_result['strm'] = [asuc, at]
-        self.lib.extra.last_sync_result['delete'] = [ds, dt]
+            return
+        if self.lib.copy_meta_file == '关闭':
+            return
+        c = 0
+        ct = len(copy_list)
+        cs = 0
+        cf = 0
+        for item in copy_list:
+            c += 1
+            src_file = ""
+            if self.lib.cloud_type == '115':
+                 src_file = os.path.join(self.lib.path_of_115, item)
+            else:
+                src_file = os.path.join(self.lib.path, item)
+            dest_file = os.path.join(self.lib.strm_root_path, item)
+            dirname = os.path.dirname(dest_file)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+            if not os.path.exists(src_file):
+                cf += 1
+                self.logger.error('[%d / %d] 元数据 - 源文件不存在：%s' % (c, ct, src_file))
+                continue
+            try:
+                if self.lib.copy_meta_file == '复制':
+                    self.logger.info('[%d / %d] 元数据 - 复制：%s => %s' % (c, ct, src_file, dest_file))
+                    shutil.copy(src_file, dest_file)
+                    time.sleep(self.lib.copy_delay)
+                if self.lib.copy_meta_file == '软链接':
+                    self.logger.info('[%d / %d] 元数据 - 软链：%s' % (c, ct, item))
+                    os.symlink(src_file, dest_file)
+                cs += 1
+            except OSError as e:
+                self.logger.error('[%d / %d] 元数据 - 复制错误：%s \n %s' % (c, ct, item, e))
+                cf += 1
+        self.lib.extra.last_sync_result['meta'] = [cs, ct]
 
     def work(self):
-        copy_list = []
-        src_tree_list = self.get_src_tree_list()
-        strm_base_dir = os.path.join(self.lib.strm_root_path, self.lib.path)
-        dest_tree_list = self.get_dest_tree_list(self.lib.strm_root_path, strm_base_dir, [self.lib.path])
-        added = []
-        for src_item in src_tree_list:
-            if src_item in dest_tree_list:
-                # 已存在，从dest中删除
-                dest_tree_list.remove(src_item)
-                continue
-            filename, ext = os.path.splitext(src_item)
-            if ext in self.lib.strm_ext:
-                strm_file = filename + '.strm'
-                if strm_file in dest_tree_list:
-                    # 如果strm文件已存在，则从dest中删除
-                    dest_tree_list.remove(strm_file)
-                    continue
-                else:
-                    added.append(src_item)
-                    continue
-            if ext in self.lib.meta_ext:
-                # 如果是元数据，则加入复制列表
-                copy_list.append(src_item)
-            
+        src_tree_list = []
+        dest_tree_list = []
+        if self.lib.cloud_type == '115':
+            src_tree_list = self.get_src_tree_list()
+            strm_base_dir = os.path.join(self.lib.strm_root_path, self.lib.path)
+            dest_tree_list = self.get_dest_tree_list(self.lib.strm_root_path, strm_base_dir, [self.lib.path])
+        else:
+            src_tree_list = self.get_dest_tree_list(self.lib.path, self.lib.path, [])
+            dest_tree_list = self.get_dest_tree_list(self.lib.strm_root_path, self.lib.strm_root_path, [])
+        dest_tree_list, added, copy_list = self.parseTree(src_tree_list, dest_tree_list)
+
         # added是要添加的, dest_tree_list剩下的是要删除的， copy_list是要复制的元数据
         # 处理删除
-        c = 0
-        dt = len(dest_tree_list)
-        ds = 0
-        df = 0
-        for delete_item in dest_tree_list:
-            c += 1
-            delete_real_dir = os.path.join(self.lib.strm_root_path, delete_item)
-            if os.path.exists(delete_real_dir):
-                # 只删除strm文件
-                _, deleted_ext = os.path.splitext(delete_item)
-                if deleted_ext != '.strm':
-                    self.logger.error('[%d / %d] 错误：%s \n %s' % (c, dt, delete_item, '只会删除STRM文件'))
-                    df += 1
-                    continue
-                try:
-                    os.unlink(delete_real_dir)
-                    self.logger.info('[%d / %d] 删除：%s' % (c, dt, delete_item))
-                    ds += 1
-                except OSError as e:
-                    self.logger.error('[%d / %d] 错误：%s \n %s' % (c, dt, delete_item, e))
-                    df += 1
-            else:
-                self.logger.error('[%d / %d] 错误：%s \n %s' % (c, dt, delete_item, '文件已经不存在'))
-                df += 1
-                continue
-
+        self.doDelete(dest_tree_list)
         # 处理添加
-        c = 0
-        at = len(added)
-        asuc = 0
-        af = 0
-        for item in added:
-            c += 1
-            rs = self.strm(item)
-            if rs == '':
-                # 成功
-                asuc += 1
-                self.logger.info('[%d / %d] STRM：%s' % (c, at, item))
-            else:
-                af += 1
-                self.logger.error('[%d / %d] 错误：%s \n %s' % (c, at, item, rs))
+        self.doAdded(added)
         # 处理元数据
-        if self.lib.type == 'WebDAV':
-            self.logger.info('webdav不处理元数据')
-        else:
-            if self.lib.copy_meta_file != '关闭':
-                c = 0
-                ct = len(copy_list)
-                cs = 0
-                cf = 0
-                for item in copy_list:
-                    c += 1
-                    src_file = os.path.join(self.lib.path_of_115, item)
-                    dest_file = os.path.join(self.lib.strm_root_path, item)
-                    dirname = os.path.dirname(dest_file)
-                    if not os.path.exists(dirname):
-                        os.makedirs(dirname)
-                    if not os.path.exists(src_file):
-                        cf += 1
-                        self.logger.error('[%d / %d] 元数据 - 源文件不存在：%s' % (c, ct, src_file))
-                        continue
-                    try:
-                        if self.lib.copy_meta_file == '复制':
-                            self.logger.info('[%d / %d] 元数据 - 复制：%s' % (c, ct, item))
-                            shutil.copy(src_file, dest_file)
-                            time.sleep(self.lib.copy_delay)
-                        if self.lib.copy_meta_file == '软链接':
-                            self.logger.info('[%d / %d] 元数据 - 软链：%s' % (c, ct, item))
-                            os.symlink(src_file, dest_file)
-                        cs += 1
-                    except OSError as e:
-                        self.logger.error('[%d / %d] 元数据 - 复制错误：%s \n %s' % (c, ct, item, e))
-                        cf += 1
-                self.logger.info('元数据结果：成功: {0}, 失败: {1}, 总共: {2}'.format(cs, cf, ct))
-                self.lib.extra.last_sync_result['meta'] = [cs, ct]
-        self.logger.info('删除结果：成功: {0}, 失败: {1}, 总共: {2}'.format(ds, df, dt))
-        self.logger.info('STRM结果：成功: {0}, 失败: {1}, 总共: {2}'.format(asuc, af, at))
-        self.lib.extra.last_sync_result['strm'] = [asuc, at]
-        self.lib.extra.last_sync_result['delete'] = [ds, dt]
+        self.doMeta(copy_list)
+        self.logger.info('删除结果：成功: {0}, 总共: {1}'.format(self.lib.extra.last_sync_result['delete'][0], self.lib.extra.last_sync_result['delete'][1]))
+        self.logger.info('元数据结果：成功: {0}, 总共: {1}'.format(self.lib.extra.last_sync_result['meta'][0], self.lib.extra.last_sync_result['meta'][1]))
+        self.logger.info('STRM结果：成功: {0}, 总共: {1}'.format(self.lib.extra.last_sync_result['strm'][0], self.lib.extra.last_sync_result['strm'][1]))
 
     def get_src_tree_list(self):
         ### 解析115目录树，生成目录数组
@@ -356,7 +295,6 @@ class Job:
             return dest_tree_list
         dirs = os.listdir(root_dir)
         for dir in dirs:
-            if dir == '.' or dir == '..': continue
             item = os.path.join(root_dir, dir)
             # if self.lib.cloud_type == '115':
             dest_tree_list.append(item.replace(base_dir + os.sep, ''))
@@ -432,4 +370,4 @@ if __name__ == '__main__':
         key = args.key
     if key == '':
         sys.exit(0)
-    StartJob(key)
+    StartJob(key, True)

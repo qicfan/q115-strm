@@ -109,6 +109,14 @@ class LibBase:
             '.sup',
             '.lrc',
         ]
+        newStrmExt = []
+        for ext in self.strm_ext:
+            newStrmExt.append(ext.lower())
+        newMetaExt = []
+        for ext in self.meta_ext:
+            newMetaExt.append(ext.lower())
+        self.strm_ext = newStrmExt
+        self.meta_ext = newMetaExt
         if self.key == '':
             self.makeKey()
             

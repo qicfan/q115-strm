@@ -195,7 +195,7 @@ def assets(filename):
 @app.route('/api/job')
 def jobApi():
     path = request.args.get('path')
-    if path is None or path != "":
+    if path is None or path == "":
         return returnJson({'code': 404, 'msg': '同步目录不存在', 'data': {}})
     lib = LIBS.getByPath(path)
     if lib is None:
