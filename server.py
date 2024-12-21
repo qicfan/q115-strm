@@ -1,10 +1,10 @@
+import json
 from multiprocessing import Process
 import os
 import signal
 from flask import Flask
 from flask_restful import Resource, Api, request
 from flask_httpauth import HTTPBasicAuth
-from flask_restful.reqparse import RequestParser
 from job import StartJob
 from lib import Libs, Lib, OO5List, Setting, TGBot
 from telebot import apihelper
@@ -133,23 +133,6 @@ class OO5(Resource):
             return {'code': 500, 'msg': msg, 'data': {}}
         return {'code': 200, 'msg': '', 'data': {}}
 
-class JobApi(Resource):
-    def get(self):
-        parser = RequestParser()
-        parser.add_argument('path')
-        # 默认会从查询字符串、post键值对、post-json数据进行参数提取
-        args = parser.parse_args()
-        if not args.path or args.path != "":
-            return {'code': 404, 'msg': '同步目录不存在', 'data': {}}
-        lib = LIBS.getByPath(args.path)
-        if lib is None:
-            return {'code': 404, 'msg': '同步目录不存在', 'data': {}}
-        if lib.extra.pid > 0:
-            return {'code': 500, 'msg': '该目录正在同步中...', 'data': {}}
-        p1 = Process(target=StartJob, kwargs={'key': lib.key})
-        p1.start()
-        return {'code': 200, 'msg': '已启动任务，可调用API查询状态：/api/lib/{0}'.format(lib.key), 'data': {}}
-
 class SettingApi(Resource):
     def get(self):
         settings = Setting()
@@ -181,7 +164,6 @@ api.add_resource(LibStop, '/api/lib/stop/<key>')
 api.add_resource(LibLog, '/api/lib/log/<key>')
 api.add_resource(OO5List, '/api/oo5list')
 api.add_resource(OO5, '/api/oo5/<key>')
-api.add_resource(JobApi, '/api/job')
 api.add_resource(SettingApi, '/api/settings')
 
 # 跨域支持
@@ -209,6 +191,24 @@ def index():
 @app.route('/assets/<path:filename>')
 def assets(filename):
     return app.send_static_file('assets/%s' % filename)
+
+@app.route('/api/job')
+def jobApi():
+    path = request.args.get('path')
+    if path is None or path != "":
+        return returnJson({'code': 404, 'msg': '同步目录不存在', 'data': {}})
+    lib = LIBS.getByPath(path)
+    if lib is None:
+        return returnJson({'code': 404, 'msg': '同步目录不存在', 'data': {}})
+    if lib.extra.pid > 0:
+        return returnJson({'code': 500, 'msg': '该目录正在同步中...', 'data': {}})
+    p1 = Process(target=StartJob, kwargs={'key': lib.key})
+    p1.start()
+    return returnJson({'code': 200, 'msg': '已启动任务，可调用API查询状态：/api/lib/{0}'.format(lib.key), 'data': {}})
+
+def returnJson(returnBody):
+    returnJson = json.dumps(returnBody)
+    return returnJson, 200, {"Content-Type":"application/json"}
 
 def StartServer(host: str = '0.0.0.0'):
     # 启动一个线程，处理同步任务
