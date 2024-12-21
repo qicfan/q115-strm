@@ -327,7 +327,7 @@ class Job:
             else:
                 path = path.replace(os.sep, '/')
                 if self.lib.mount_path != '':
-                    path = path.replace(self.lib.mount_path, '')
+                    path = path.lstrip(self.lib.mount_path)
                     print("path replace mount: {0}".format(path))
                     if path.startswith('/'):
                         path.lstrip('/')
