@@ -5,6 +5,7 @@ import os, sys
 
 cronProcess: Process | None = None
 watchProcess: Process | None = None
+webProcess: Process | None = None
 
 def stop(sig, frame):
     try:
@@ -15,6 +16,11 @@ def stop(sig, frame):
     try:
         if cronProcess is not None:
             cronProcess.terminate()
+    except:
+        pass
+    try:
+        if webProcess is not None:
+            webProcess.terminate()
     except:
         pass
     sys.exit(0)
@@ -42,4 +48,6 @@ if __name__ == '__main__':
     cronProcess = Process(target=StartCron)
     cronProcess.start()
     # 启动web服务
-    StartServer()
+    webProcess = Process(target=StartServer)
+    webProcess.start()
+    webProcess.join()
