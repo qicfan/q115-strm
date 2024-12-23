@@ -1,11 +1,10 @@
 from multiprocessing import Process
 from queue import Queue
-import signal, sys, shutil
-from threading import Thread
+import shutil
 import time
 from typing import Mapping
 from watchdog.observers import Observer
-from watchdog.observers.api import BaseObserver
+from watchdog.observers.api import ObservedWatch
 from watchdog.events import *
 
 from lib import Lib, Libs
@@ -14,7 +13,8 @@ from log import getLogger
 LIBS = Libs()
 logger = getLogger(name='watch', rotating=True, stream=True)
 queue = Queue()
-pool: Mapping[str, BaseObserver] = {}
+pool: Mapping[str, ObservedWatch] = {}
+ob = Observer()
 
 class FileEventHandler(FileSystemEventHandler):
 
@@ -138,27 +138,27 @@ class FileEventHandler(FileSystemEventHandler):
     def on_modified(self, event):
         pass
 
-def watch(key: str) -> BaseObserver | None:
-    ob = Observer() # 定义监控类,多线程类 thread class
+def watch(key: str) -> ObservedWatch | None:
     try:
         eventHandler = FileEventHandler(key)
         if eventHandler.lib.cloud_type == '115':
-            ob.schedule(eventHandler,os.path.join(eventHandler.lib.path_of_115, eventHandler.lib.path), recursive=True) # 指定监控路径/触发对应的监控事件类
+            watchObj = ob.schedule(eventHandler,os.path.join(eventHandler.lib.path_of_115, eventHandler.lib.path), recursive=True) # 指定监控路径/触发对应的监控事件类
         else:
-            ob.schedule(eventHandler,os.path.join(eventHandler.lib.path), recursive=True) # 指定监控路径/触发对应的监控事件类
-        ob.start()# 将observer运行在同一个线程之内,不阻塞主进程运行,可以调度observer来停止该线程
-        return ob
+            watchObj = ob.schedule(eventHandler,os.path.join(eventHandler.lib.path), recursive=True) # 指定监控路径/触发对应的监控事件类
+        return watchObj
     except Exception as e:
         logger.info('同步目录[{0}]无法启动监控任务\n {1}'.format(key, e))
         return None
 
 def StartWatch():
     global pool
+    global ob
     # 启动一个队列处理线程
     # fst = Thread(target=doFailedQueue)
     # fst.start()
     # logger.info('失败重试服务已启动')
     path_of_115 = ''
+    isStart = False
     while(True):
         libs = LIBS.list()
         if len(libs) == 0:
@@ -168,9 +168,7 @@ def StartWatch():
         if path_of_115 != "" and not os.path.exists(path_of_115):
             # 挂载丢失，停止全部线程，等待重试
             logger.info('115挂载丢失，将结束全部监控线程，等待30s重试')
-            for key in pool:
-                ob = pool.get(key)
-                ob.stop()
+            ob.unscheduleAll()
             pool = {}
             time.sleep(30)
         # 开始处理同步目录
@@ -183,14 +181,14 @@ def StartWatch():
                 if item.sync_type != '监控变更' and p is not None:
                     # 结束进程
                     logger.info('同步目录[%s]的同步方式变更为非监控，终止监控任务' % item.path)
-                    p.stop()
+                    ob.unschedule(p)
                     del pool[item.key]
                     continue
                 if item.sync_type == '监控变更' and p is None:
                     # 启动新的子进程
-                    ob = watch(item.key)
-                    if ob is not None:
-                        pool[item.key] = ob
+                    watchObj = watch(item.key)
+                    if watchObj is not None:
+                        pool[item.key] = watchObj
                         logger.info('新增同步目录[%s]监控任务' % item.path)
                     continue
             except Exception as e:
@@ -203,13 +201,15 @@ def StartWatch():
                 continue
             # 同步目录已删除，终止任务
             try:
-                ob = pool.get(key)
-                ob.stop()
+                watchObj = pool.get(key)
+                ob.unschedule(watchObj)
             except Exception as e:
                 logger.error("监控任务停止失败 [{0}] : {1}".format(item.path, e))
             del pool[key]
             logger.info('同步目录[%s]已删除，终止监控任务' % item.path)
         try:
+            if isStart is False:
+                ob.start()
             logger.info('已启动所有监控任务，开始10s一次检测任务执行状态')
             time.sleep(10)
         except:
