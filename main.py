@@ -7,10 +7,16 @@ cronProcess: Process | None = None
 watchProcess: Process | None = None
 
 def stop(sig, frame):
-    if watchProcess is not None:
-        watchProcess.terminate()
-    if cronProcess is not None:
-        cronProcess.terminate()
+    try:
+        if watchProcess is not None:
+            watchProcess.terminate()
+    except:
+        pass
+    try:
+        if cronProcess is not None:
+            cronProcess.terminate()
+    except:
+        pass
     sys.exit(0)
 
 signal.signal(signal.SIGINT, stop)
@@ -24,7 +30,6 @@ if not os.path.exists('./data/config/setting.json'):
     setting = {"username": "admin", "password": "admin", "telegram_bot_token": "", "telegram_user_id": ""}
     with open('./data/config/setting.json', mode='w', encoding='utf-8') as f:
         json.dump(setting, f)
-
 
 from cron import StartCron
 from server import StartServer

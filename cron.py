@@ -26,13 +26,16 @@ def get_file_md5(file_path):
 def startCronSub():
     logger.info('启动Crontab守护进程')
     tab = CronTab(tabfile=TABFILE)
-    for result in tab.run_scheduler():
-        logger.info("Return code: {0}".format(result.returncode))
-        logger.info("Standard Out: {0}".format(result.stdout))
-        logger.info("Standard Err: {0}".format(result.stderr))
+    try:
+        for result in tab.run_scheduler():
+            logger.info("Return code: {0}".format(result.returncode))
+            logger.info("Standard Out: {0}".format(result.stdout))
+            logger.info("Standard Err: {0}".format(result.stderr))
+    except:
+        pass
 
 def StartCron():
-    if not os.path.exists('./data/config/cron.tab'):
+    if not os.path.exists(TABFILE):
         with open(TABFILE, mode='w', encoding='utf-8') as f:
             f.write('')
     LIBS = Libs()
@@ -54,7 +57,11 @@ def StartCron():
             md5 = newmd5
         # else:
         #     print("cron文件没有变化，等待10秒重试")
-        time.sleep(1)
+        try:
+            logger.info('已启动所有定时任务，开始10s一次检测任务执行状态')
+            time.sleep(10)
+        except:
+            break
 
 if __name__ == '__main__':
     StartCron()

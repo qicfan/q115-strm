@@ -9,7 +9,9 @@ from telebot import apihelper
 proxyHost = os.getenv('PROXY_HOST', '')
 if proxyHost != '':
     apihelper.proxy = {'http': proxyHost, 'https': proxyHost}
-TABFILE = os.path.abspath('./data/config/cron.tab')
+TABFILE = './data/config/cron.tab'
+
+
 
 def GetNow():
     # 获取当前时间
@@ -19,7 +21,6 @@ def GetNow():
     # 将当前时间转换为北京时区
     now_beijing = now.astimezone(beijing)
     return now_beijing.strftime("%Y-%m-%d %H:%M:%S")
-
 
 
 class LibExtra:

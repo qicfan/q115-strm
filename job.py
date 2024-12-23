@@ -296,15 +296,13 @@ class Job:
         dirs = os.listdir(root_dir)
         for dir in dirs:
             item = os.path.join(root_dir, dir)
-            # if self.lib.cloud_type == '115':
-            dest_tree_list.append(item.replace(base_dir + os.sep, ''))
-            # else:
-            #     dest_tree_list.append(item)
+            item = item.lstrip(base_dir + os.sep)
+            item.replace(os.sep, '/')
+            dest_tree_list.append(item)
             if os.path.isfile(item):
                 # 如果是文件，则不用递归
                 continue
-            else:
-                self.get_dest_tree_list(base_dir, item, dest_tree_list)
+            self.get_dest_tree_list(base_dir, item, dest_tree_list)
         return dest_tree_list
 
     def strm(self, path: str):
