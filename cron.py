@@ -58,7 +58,7 @@ def StartCron():
         # else:
         #     print("cron文件没有变化，等待10秒重试")
         try:
-            logger.info('已启动所有定时任务，开始10s一次检测任务执行状态')
+            # logger.info('已启动所有定时任务，开始10s一次检测任务执行状态')
             time.sleep(10)
         except:
             break

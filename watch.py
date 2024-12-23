@@ -210,7 +210,7 @@ def StartWatch():
         try:
             if isStart is False:
                 ob.start()
-            logger.info('已启动所有监控任务，开始10s一次检测任务执行状态')
+            # logger.info('已启动所有监控任务，开始10s一次检测任务执行状态')
             time.sleep(10)
         except:
             break
