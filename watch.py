@@ -169,6 +169,8 @@ def StartWatch():
             # 挂载丢失，停止全部线程，等待重试
             logger.info('115挂载丢失，将结束全部监控线程，等待30s重试')
             ob.unscheduleAll()
+            ob.stop()
+            isStart = False
             pool = {}
             time.sleep(30)
         # 开始处理同步目录
