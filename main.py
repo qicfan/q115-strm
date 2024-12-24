@@ -2,31 +2,44 @@ import json
 from multiprocessing import Process
 import signal
 import os, sys
+import time
 
 cronProcess: Process | None = None
 watchProcess: Process | None = None
 webProcess: Process | None = None
 
 def stop(sig, frame):
+    print("收到终止信号：{0}".format(sig))
     try:
         if watchProcess is not None:
             watchProcess.terminate()
+            print("等待停止监控服务")
+            watchProcess.join()
+            print("监控服务已停止")
+            watchProcess = None
     except:
         pass
     try:
         if cronProcess is not None:
             cronProcess.terminate()
+            print("等待停止定时任务服务")
+            cronProcess.join()
+            print("定时任务服务已停止")
+            cronProcess = None
     except:
         pass
     try:
         if webProcess is not None:
             webProcess.terminate()
+            print("等待停止Web服务")
+            webProcess.join()
+            print("Web服务已停止")
+            webProcess = None
     except:
         pass
+
     sys.exit(0)
 
-signal.signal(signal.SIGINT, stop)
-signal.signal(signal.SIGTERM, stop)
 if not os.path.exists('./data/logs'):
     os.makedirs('./data/logs')
 if not os.path.exists('./data/config'):
@@ -50,4 +63,11 @@ if __name__ == '__main__':
     # 启动web服务
     webProcess = Process(target=StartServer)
     webProcess.start()
-    webProcess.join()
+    try:
+        print("所有服务启动完毕，阻塞主进程并等待其他信号")
+        signal.signal(signal.SIGINT, stop)
+        signal.signal(signal.SIGTERM, stop)
+        while(True):
+            time.sleep(2)
+    except:
+        stop(None, None)

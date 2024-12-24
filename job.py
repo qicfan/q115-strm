@@ -99,6 +99,8 @@ class Job:
         self.lib.extra.status = 3
         self.lib.extra.pid = 0
         LIBS.saveExtra(self.lib)
+        self.logger.info("*{0}* 中断同步".format(self.lib.name))
+        self.notify("*{0}* 中断同步".format(self.lib.name))
         sys.exit(1)
     
     def parseTree(self, src_tree_list: list, dest_tree_list: list) -> tuple[list, list, list]:
@@ -164,7 +166,7 @@ class Job:
             # 处理文件，只删除strm文件
             _, deleted_ext = os.path.splitext(delete_item)
             if deleted_ext != '.strm':
-                self.logger.error('[%d / %d] 错误：网盘不存在该文件，疑似本地刮削产物： %s' % (c, dt, delete_item))
+                # self.logger.warning('[%d / %d] 错误：网盘不存在该文件，疑似本地刮削产物： %s' % (c, dt, delete_item))
                 df += 1
             else:
                 try:
@@ -244,19 +246,18 @@ class Job:
         dest_tree_list = []
         if self.lib.cloud_type == '115':
             src_tree_list = self.get_src_tree_list()
-            strm_base_dir = os.path.join(self.lib.strm_root_path, self.lib.path)
-            dest_tree_list = self.get_dest_tree_list(self.lib.strm_root_path, strm_base_dir, [self.lib.path])
+            strm_base_dir = os.path.join(self.lib.strm_root_path, self.lib.path.replace('/', os.sep))
+            dest_tree_list = self.get_dest_tree_list(self.lib.strm_root_path, strm_base_dir, [self.lib.path.replace('/', os.sep)])
         else:
             src_tree_list = self.get_dest_tree_list(self.lib.path, self.lib.path, [])
             dest_tree_list = self.get_dest_tree_list(self.lib.strm_root_path, self.lib.strm_root_path, [])
         dest_tree_list, added, copy_list = self.parseTree(src_tree_list, dest_tree_list)
-
-        # added是要添加的, dest_tree_list剩下的是要删除的， copy_list是要复制的元数据
-        # 处理删除
+        # # added是要添加的, dest_tree_list剩下的是要删除的， copy_list是要复制的元数据
+        # # 处理删除
         self.doDelete(dest_tree_list)
-        # 处理添加
+        # # 处理添加
         self.doAdded(added)
-        # 处理元数据
+        # # 处理元数据
         self.doMeta(copy_list)
         self.logger.info('删除结果：成功: {0}, 总共: {1}'.format(self.lib.extra.last_sync_result['delete'][0], self.lib.extra.last_sync_result['delete'][1]))
         self.logger.info('元数据结果：成功: {0}, 总共: {1}'.format(self.lib.extra.last_sync_result['meta'][0], self.lib.extra.last_sync_result['meta'][1]))
@@ -280,10 +281,10 @@ class Job:
                     if i == 2 and self.lib.path.endswith(item['name']):
                         item['path'] = self.lib.path
                     else:
-                        item['path'] = os.path.join(parent['path'], item['name'].lstrip())
+                        item['path'] = "{0}/{1}".format(parent['path'], item['name'])
                 path_index[item['key']] = item
                 if item['path'] != '':
-                    src_tree_list.append(item['path'])
+                    src_tree_list.append(item['path'].replace('/', os.sep))
             return src_tree_list
         except Exception as e:
             self.logger.error('生成目录树出错: %s' % e)
@@ -291,14 +292,12 @@ class Job:
 
     def get_dest_tree_list(self, base_dir: str, root_dir: str, dest_tree_list: list):
         ### 获取目标路径目录树，用于处理差异
-        if not os.path.exists(root_dir):
-            return dest_tree_list
+        # if not os.path.exists(root_dir):
+        #     return dest_tree_list
         dirs = os.listdir(root_dir)
         for dir in dirs:
             item = os.path.join(root_dir, dir)
-            item = item.lstrip(base_dir + os.sep)
-            item.replace(os.sep, '/')
-            dest_tree_list.append(item)
+            dest_tree_list.append(item.lstrip(base_dir + os.sep))
             if os.path.isfile(item):
                 # 如果是文件，则不用递归
                 continue
@@ -316,6 +315,9 @@ class Job:
             # 生成STRM文件
             strm_file = filename + '.strm'
             strm_real_file = os.path.join(self.lib.strm_root_path, strm_file)
+            if os.path.exists(strm_real_file):
+                # 如果已存在，则不处理
+                return
             strm_content = ''
             if self.lib.type == '本地路径':
                 if self.lib.cloud_type == '115':

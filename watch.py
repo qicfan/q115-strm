@@ -1,11 +1,12 @@
-from multiprocessing import Process
 from queue import Queue
 import shutil
+import signal
 import time
 from typing import Mapping
 from watchdog.observers import Observer
 from watchdog.observers.api import ObservedWatch
 from watchdog.events import *
+import os, sys
 
 from lib import Lib, Libs
 from log import getLogger
@@ -153,6 +154,13 @@ def watch(key: str) -> ObservedWatch | None:
 def StartWatch():
     global pool
     global ob
+    def stop(sig, frame):
+        ob.stop()
+        ob.unschedule_all()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, stop)
+    signal.signal(signal.SIGTERM, stop)
     # 启动一个队列处理线程
     # fst = Thread(target=doFailedQueue)
     # fst.start()
@@ -168,7 +176,7 @@ def StartWatch():
         if path_of_115 != "" and not os.path.exists(path_of_115):
             # 挂载丢失，停止全部线程，等待重试
             logger.info('115挂载丢失，将结束全部监控线程，等待30s重试')
-            ob.unscheduleAll()
+            ob.unschedule_all()
             ob.stop()
             isStart = False
             pool = {}
