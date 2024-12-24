@@ -292,8 +292,8 @@ class Job:
 
     def get_dest_tree_list(self, base_dir: str, root_dir: str, dest_tree_list: list):
         ### 获取目标路径目录树，用于处理差异
-        # if not os.path.exists(root_dir):
-        #     return dest_tree_list
+        if not os.path.exists(root_dir):
+            return dest_tree_list
         dirs = os.listdir(root_dir)
         for dir in dirs:
             item = os.path.join(root_dir, dir)
