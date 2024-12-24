@@ -38,6 +38,7 @@ jobs:
         platforms: |
           linux/amd64
           linux/arm64
+          linux/arm/v8
         push: true
         # 指定用户/仓库名
         tags: |
