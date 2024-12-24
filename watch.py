@@ -155,8 +155,8 @@ def StartWatch():
     global pool
     global ob
     def stop(sig, frame):
-        ob.stop()
         ob.unschedule_all()
+        ob.stop()
         sys.exit(0)
 
     signal.signal(signal.SIGINT, stop)
