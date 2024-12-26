@@ -230,11 +230,13 @@ class Job:
             try:
                 if self.lib.copy_meta_file == '复制':
                     self.logger.info('[%d / %d] 元数据 - 复制：%s => %s' % (c, ct, src_file, dest_file))
-                    shutil.copy(src_file, dest_file)
+                    if not os.path.exists(dest_file):
+                        shutil.copy(src_file, dest_file)
                     time.sleep(self.lib.copy_delay)
                 if self.lib.copy_meta_file == '软链接':
                     self.logger.info('[%d / %d] 元数据 - 软链：%s' % (c, ct, item))
-                    os.symlink(src_file, dest_file)
+                    if not os.path.exists(dest_file):
+                        os.symlink(src_file, dest_file)
                 cs += 1
             except OSError as e:
                 self.logger.error('[%d / %d] 元数据 - 复制错误：%s \n %s' % (c, ct, item, e))
