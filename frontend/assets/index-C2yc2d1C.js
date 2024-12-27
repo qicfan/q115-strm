@@ -97,7 +97,6 @@ var mw=(e,t)=>()=>(t||e((t={exports:{}}).exports,t),t.exports);var $0e=mw((fa,pa
     - 目录3每天0点10分执行：10 0 * * *
 1. 监控变更依赖于CD2的会员功能，请确保使用CD2并且开通了会员
 1. alist302方式要求emby/jellyfin + emby2alist配合，否则无法直接播放
-1. 如有使用问题或者其他建议可以邮件联系：<qicfan@gmail.com>
 
 ## 使用步骤：
 - 第一步：添加115账号

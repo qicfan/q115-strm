@@ -173,18 +173,24 @@ def StartWatch():
             logger.info('没有需要监控的目录，等待10s')
             time.sleep(10)
             continue
-        if path_of_115 != "" and not os.path.exists(path_of_115):
-            # 挂载丢失，停止全部线程，等待重试
-            logger.info('115挂载丢失，将结束全部监控线程，等待30s重试')
-            ob.unschedule_all()
-            ob.stop()
-            isStart = False
-            pool = {}
-            time.sleep(30)
+        # logger.info("开始检测115挂载是否失效")
+        # if path_of_115 != "":
+        #     if not os.path.exists(path_of_115):
+        #         # 挂载丢失，停止全部线程，等待重试
+        #         logger.warning('115挂载丢失，将结束全部监控线程，等待30s重试')
+        #         ob.unschedule_all()
+        #         ob.stop()
+        #         isStart = False
+        #         pool = {}
+        #         time.sleep(60)
+        #     else:
+        #         logger.info('115挂载正常')
+        
         # 开始处理同步目录
         for item in libs:
-            if item.cloud_type == '115' and item.type == '本地路径':
-                path_of_115 = item.path_of_115
+            # if item.cloud_type == '115' and item.type == '本地路径' and path_of_115 == '':
+            #     path_of_115 = os.path.join(item.path_of_115, item.path)
+            #     logger.info("检测挂载路径是否失效的路径：%s" % path_of_115)
             # 检查是否存在进程
             try:
                 p = pool.get(item.key)
@@ -221,9 +227,11 @@ def StartWatch():
             if isStart is False:
                 ob.start()
                 isStart = True
-            # logger.info('已启动所有监控任务，开始10s一次检测任务执行状态')
+                logger.info("已启动全部监控任务")
+            #logger.info('已启动所有监控任务，开始10s一次检测任务执行状态')
             time.sleep(10)
-        except:
+        except Exception as e:
+            logger.error("监控任务停止: {1}".format(e))
             break
 
 if __name__ == '__main__':
