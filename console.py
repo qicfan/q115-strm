@@ -26,11 +26,12 @@ def listLib():
     table = Table(title="同步目录列表")
 
     table.add_column("KEY", justify="left", style="cyan", no_wrap=True)
+    table.add_column("网盘类型",)
     table.add_column("名称", style="magenta")
     table.add_column("目录树路径", justify="right", style="green")
     table.add_column("方式", justify="right", style="red")
     for lib in libList:
-        table.add_row(lib.key, lib.name, lib.path, lib.type)
+        table.add_row(lib.key, lib.cloud_type, lib.name, lib.path, lib.type)
     console = Console()
     console.print(table)
 
@@ -79,6 +80,7 @@ def create():
     if tmp.get('path') is not None:
         rprint("已经将上一次输入的值设置为每一项的默认值，[bold]如果没有改动可以直接回车[/]，直到未完成的输入项")
     lib = Lib(tmp)
+    # 选择网盘类型
     o5s: list[OO5] = o5List.getList()
     if len(o5s) == 0:
         rprint("[bold red]请先添加115账号，执行：q115strm.exe add115[/]")

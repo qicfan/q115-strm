@@ -6,6 +6,7 @@ import textwrap
 import time
 import urllib
 import urllib.parse
+import psutil
 
 from p115client import P115Client, tool
 import telegramify_markdown
@@ -43,9 +44,12 @@ class Job:
             if self.oo5Account is None:
                 self.logger.error('无法找到所选的115账号，请检查115账号列表中是否存在此项: %s' % self.lib.id_of_115)
                 raise ValueError('无法找到所选的115账号，请检查115账号列表中是否存在此项')
-        if self.lib.extra.pid > 0:
-            self.logger.error('正在同步中，跳过本次执行')
-            raise ValueError('正在同步中，跳过本次执行')
+        try:
+            if self.lib.extra.pid > 0 and psutil.pid_exists(self.lib.extra.pid):
+                self.logger.error('正在同步中，跳过本次执行')
+                raise ValueError('正在同步中，跳过本次执行')
+        except:
+            pass
 
     def notify(self, msg):
         settings = Setting()

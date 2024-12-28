@@ -156,6 +156,25 @@ class SettingApi(Resource):
                 return {'code': 500, 'msg': '保存成功，但是Telegram通知配置出错：{0}'.format(msg), 'data': settings.__dict__}
         return {'code': 200, 'msg': '', 'data': settings.__dict__}
 
+class DirApi(Resource):
+    def post(self):
+        """
+        返回目录列表
+        """
+        data = request.get_json()
+        base_dir = data.get('base_dir')
+        if base_dir is None or base_dir == '':
+            base_dir = '/'
+        dirs = os.listdir(base_dir)
+        result = []
+        for dir in dirs:
+            item = os.path.join(base_dir, dir)
+            if os.path.isfile(item):
+                # 如果是文件，则不用递归
+                continue
+            result.append(dir)
+        return {'code': 200, 'msg': '', 'data': result}
+
         
 api.add_resource(Libs, '/api/libs')
 api.add_resource(Lib, '/api/lib/<key>')
@@ -165,6 +184,7 @@ api.add_resource(LibLog, '/api/lib/log/<key>')
 api.add_resource(OO5List, '/api/oo5list')
 api.add_resource(OO5, '/api/oo5/<key>')
 api.add_resource(SettingApi, '/api/settings')
+api.add_resource(DirApi, '/api/dir')
 
 # 跨域支持
 def after_request(resp):
