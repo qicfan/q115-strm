@@ -156,23 +156,13 @@ class Job:
         for delete_item in dest_tree_list:
             c += 1
             delete_real_file = os.path.join(self.lib.strm_root_path, delete_item)
-            delete_real_path = os.path.dirname(delete_real_file)
             if not os.path.exists(delete_real_file):
                 self.logger.error('[%d / %d] %s \n %s' % (c, dt, delete_item, '文件已经删除'))
                 ds += 1
                 continue
-            if os.path.isdir(delete_real_file):
-                # 文件夹直接删除
-                shutil.rmtree(delete_real_file)
-                self.logger.info('[%d / %d] 删除网盘不存在的文件夹：%s' % (c, dt, delete_real_file))
-                ds += 1
-                continue
             # 处理文件，只删除strm文件
             _, deleted_ext = os.path.splitext(delete_item)
-            if deleted_ext != '.strm':
-                # self.logger.warning('[%d / %d] 错误：网盘不存在该文件，疑似本地刮削产物： %s' % (c, dt, delete_item))
-                df += 1
-            else:
+            if deleted_ext == '.strm':
                 try:
                     os.unlink(delete_real_file)
                     self.logger.info('[%d / %d] 删除网盘不存在的文件：%s' % (c, dt, delete_item))
@@ -180,30 +170,19 @@ class Job:
                 except OSError as e:
                     self.logger.error('[%d / %d] 错误：%s \n %s' % (c, dt, delete_item, e))
                     df += 1
-            # 检查目录是否为空，如果为空，则删除目录
-            dirs = os.listdir(delete_real_path)
-            c = len(dirs)
-            if c == 0:
-                # 该目录为空，则删除该目录
-                os.remove(delete_real_path)
-                self.logger.info('[%d / %d] 删除空文件夹：%s' % (c, dt, delete_real_path))
-            else:
-                # 检查目录下是否有strm文件或者其他文件夹
-                can_delete = True
-                for d in dirs:
-                    item = os.path.join(delete_real_path, d)
-                    if os.path.isdir(item):
-                        can_delete = False
-                        break
-                    _, ext = os.path.splitext(item)
-                    if ext.lower() == '.strm':
-                        can_delete = False
-                        break
-                if can_delete == True:
-                    # 删除没有strm和子文件夹的目录
-                    shutil.rmtree(delete_real_path)
-                    self.logger.info('[%d / %d] 删除没有STRM的文件夹：%s' % (c, dt, delete_real_path))
-
+                continue
+            if self.lib.delete == "是":
+                if os.path.isdir(delete_real_file):
+                    # 文件夹直接删除
+                    shutil.rmtree(delete_real_file)
+                    self.logger.info('[%d / %d] 删除网盘不存在的文件夹：%s' % (c, dt, delete_real_file))
+                    ds += 1
+                    continue
+                else:
+                    # 删除文件
+                    os.unlink(delete_real_file)
+                    self.logger.info('[%d / %d] 删除网盘不存在的文件：%s' % (c, dt, delete_item))
+                    ds += 1
         self.lib.extra.last_sync_result['delete'] = [ds, dt]
 
     def doMeta(self, copy_list: list):
@@ -323,7 +302,7 @@ class Job:
             strm_real_file = os.path.join(self.lib.strm_root_path, strm_file)
             if os.path.exists(strm_real_file):
                 # 如果已存在，则不处理
-                return
+                return ""
             strm_content = ''
             if self.lib.type == '本地路径':
                 if self.lib.cloud_type == '115':
@@ -357,8 +336,8 @@ class Job:
                     strm_content = '{0}/d/{1}/{2}'.format(url, alist_115_path, '/'.join(newPath))
             with open(strm_real_file, 'w', encoding='utf-8') as f:
                 f.write(strm_content)
-            return ''
-        except OSError as e:
+            return ""
+        except Exception as e:
             return e
         
 def StartJob(key: str, logStream: bool = False):

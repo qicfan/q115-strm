@@ -60,6 +60,7 @@ class LibBase:
     id_of_115: str # 115账号标识
     strm_ext: list[str] # strm扩展名
     meta_ext: list[str] # 元数据扩展名
+    delete: str # 是否删除网盘不存在的本地文件：是 | 否
 
     def __init__(self, data: None | dict):
         if data is None:
@@ -110,6 +111,7 @@ class LibBase:
             '.sup',
             '.lrc',
         ]
+        self.delete = data.get('delete') if data.get('delete') is not None else '否'
         newStrmExt = []
         for ext in self.strm_ext:
             newStrmExt.append(ext.lower())
