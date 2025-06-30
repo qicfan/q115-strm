@@ -2,9 +2,10 @@ import json
 from multiprocessing import Process
 import os
 import signal
-from flask import Flask
+from flask import Flask, redirect
 from flask_restful import Resource, Api, request
 from flask_httpauth import HTTPBasicAuth
+from p115client import P115Client, tool
 from job import StartJob
 from lib import Libs, Lib, OO5List, Setting, TGBot
 from telebot import apihelper
@@ -57,7 +58,6 @@ class Lib(Resource):
         if rs is False:
             return {'code': 500, 'msg': msg, 'data': {}}
         return {'code': 200, 'msg': '', 'data': {}}
-
 
 class LibSync(Resource):
     def post(self, key: str):
@@ -175,7 +175,6 @@ class DirApi(Resource):
             result.append(dir)
         return {'code': 200, 'msg': '', 'data': result}
 
-        
 api.add_resource(Libs, '/api/libs')
 api.add_resource(Lib, '/api/lib/<key>')
 api.add_resource(LibSync, '/api/lib/sync/<key>')
@@ -226,13 +225,27 @@ def jobApi():
     p1.start()
     return returnJson({'code': 200, 'msg': '已启动任务，可调用API查询状态：/api/lib/{0}'.format(lib.key), 'data': {}})
 
+@app.route('/d/<path:pick_code>')
+def url(pick_code):
+    global o5List
+    accountList = o5List.getList()
+    for oo5Account in accountList:
+        client = P115Client(oo5Account.cookie)
+        try:
+            rs = tool.download.batch_get_url(client=client, id_or_pickcode=pick_code)
+            url = rs.values[0]
+            return redirect(url)
+        except:
+            continue
+    raise Exception("无法获取播放链接...")
+
 def returnJson(returnBody):
     returnJson = json.dumps(returnBody)
     return returnJson, 200, {"Content-Type":"application/json"}
 
 def StartServer(host: str = '0.0.0.0'):
     # 启动一个线程，处理同步任务
-    app.run(host, port=12123)
+    app.run(host, port=9527)
 
 if __name__ == '__main__':
     StartServer(host='127.0.0.1')
