@@ -1,110 +1,159 @@
-# 项目待回归，拟接入115开放平台接口，实现脱离cd2或者alist的播放
-
 ## 介绍
-##### 基于[p115client](https://github.com/ChenyangGao/p115client)开发，通过生成115目录树来快速完成STRM文件创建，由于只有一次请求所以不会触发风控
-##### 默认用户名密码都是admin
 
-## 注意事项
-1. 同一个账号同一时间只能有一个生成目录树的操作，请不要添加多个相同账号的cookie
-1. 115网盘中的目录名不能包含媒体文件扩展名，否则会被识别为文件而不是目录
-    > 比如战狼电影：Media/Movie/战狼.FLAC.MP4/战狼.FLAC.MP4，这个目录会被识别为两个MP4文件
-    - Media/Movie/战狼.FLAC.MP4
-    - Media/Movie/战狼.FLAC.MP4/战狼.FLAC.MP4
-    > 这是由于115目录树不包含文件元数据，只能通过是否有媒体文件扩展名来确定到底是文件还是目录
-1. 如果文件很多，建议添加多个同步目录，这样处理速度更快
-1. 如果同一账号的多个目录都使用定时同步方式，那么执行时间需要错开，间隔5分钟为佳
-    - 目录1每天0点0分执行：0 0 * * *
-    - 目录2每天0点5分执行：5 0 * * *
-    - 目录3每天0点10分执行：10 0 * * *
-1. 监控变更依赖于CD2的会员功能，请确保使用CD2并且开通了会员
-1. alist302方式要求emby/jellyfin + emby2alist配合，否则无法直接播放
-1. 如果配置电报通知并且服务器在国内，需要配置代理，docke添加环境变量PROXY_HOST=http://ip:port
-1. 如果需要编程触发任务执行，请调用：http://ip:port/api/job/{path}，path参数指添加同步目录时的同步路径字段的值
+- 基于 115 开放平台接口来同步生成 STRM 和下载元数据，并且提供直链解析服务，不依赖其他项目。
+- 原理：定时同步 115 的文件树根本地文件树对比：
+- 1. 本地存在网盘不存在则删除本地文件
+- 2. 本地不存在网盘存在则创建本地文件（STRM 或元数据下载）
+- 3. 本地存在且网盘存在，则判断文件是否一致（文件 pick_code 是否相同），一致则不处理，不一致则更新
+- 实测 3W 多文件大概 22T 的库需要 5 分钟左右完成目录树生成和对比，首次下载元数据需要的时间不定，可能在 1-2 个小时左右。
+- 定时任务设定不能小于 1 小时间隔
 
-## TODO
-- [x] STRM生成
-- [x] 元数据复制
-- [x] 支持源文件不存在时删除目标文件
-- [x] 支持CD2本地挂载，STRM内存放媒体文件的本地路径
-- [x] 支持WebDAV，STRM内存放WebDAV Url，可供播放器直接播放
-- [x] 支持Alist 302，STRM内存放Alist链接(http://ip:port/d/115/xxxxx.mkv) ，配合emby2alist插件，客户端可播放115真实链接节省服务器流量(v0.3.2版本)
-- [x] 元数据增加软链接处理方式
-- [x] docker支持 + 简单的web ui (v0.2版本)
-- [x] docker版本增加监控文件变更，自动生成STRM，CD2 only (v0.2版本)
-- [x] docker版本定时同步 (v0.2版本)
-- [x] docker版本支持添加多个同步目录，每个同步目录都可以单独设置类型(local,webdav)，strm_ext, meta_ext，以及使用不同的115账号(v0.2版本)
-- [x] docker版本监控服务使用队列来进行精细化操作，减少对115目录树的生成请求(v0.3版本)
-- [x] 可执行文件采用交互式命令行来创建配置文件(v0.3.1版本)
-- [x] 支持其他网盘的STRM生成，但是需要本地挂载软件如CD或RClone支持(v0.3.4版本)
-- [x] Web UI支持简易HTTP AUTH (v0.4版本)
-- [x] 支持发送电报通知 (v0.4版本)
+- 默认用户名 admin,密码 admin123
+
+### 功能列表
+
+- [x] 115 开放平台接入
+- [x] STRM 生成
+- [x] 元数据下载
+- [ ] 根据 STRM 文件秒传文件（将 STRM 里的内容发给其他人，其他人可以直接秒传给自己）
+- [ ] 接入资源库
+- [ ] emby 302（待定，优先级低）
+- [ ] 影片整理（待定， 优先级最低）
+- [ ] 分享转存（待定，115 开放平台无法实现，需要 115 api）
+
+## 快速开始
+
+### 使用 Docker Run
+
+```bash
+# 创建数据目录
+mkdir -p {root_dir}/q115-strm/config/logs/libs
+mkdir -p {root_dir}/q115-strm/config/libs
 
 
-## 一、可执行文件运行：
-1. 下载对应平台的压缩包，并解压
-2. 打开终端切换到项目目录执行命令，比如解压到了D盘q115-strm目录：
-```console
-cd D:\q115-strm
-// 查看同步目录列表
-q115strm.exe list
-// 添加115账号
-q115strm.exe add115
-// 添加同步目录
-q115strm.exe create
-// 执行全部同步任务
-q115strm.exe run
-// 执行单个同步任务
-q115strm.exe run -k=xxx
+# 运行容器
+docker run -d \
+  --name q115-strm \
+  -p 12333:12333 \
+  -v $(pwd)/q115-strm/config:/app/config \
+  -v /vol1/1000/网盘:/media \
+  -e TZ=Asia/Shanghai \
+  --restart unless-stopped \
+  qicfan/115strm:latest
 ```
 
-## 二、DOCKER
-   ```bash
-   docker run -d \
-     --name q115strm \
-     -e "TZ=Asia/Shanghai" \
-     -v /vol1/1000/docker/q115strm/data:/app/data \
-     -v /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115:shared \
-     -v /vol1/1000/视频/网盘/115:/115 \
-     -p 12123:12123 \
-     --restart unless-stopped \
-     qicfan/115strm:latest
-   ```
+### 使用 Docker Compose
 
-或者compose
+1. 创建 `docker-compose.yml` 文件（见下方示例）
 
 ```
 services:
-  115strm:
-    image: qicfan/115strm
-    container_name: q115strm
-    environment:
-      - TZ=Asia/Shanghai
-    ports:
-      - target: 12123
-        published: 12123
-        protocol: tcp
-    volumes:
-      - /vol1/1000/docker/q115strm/data:/app/data # 运行日志和数据
-      - /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115:shared # CD2挂载115的的绝对路径，必须完整映射到容器中，如果使用WebDAV则不需要这个映射
-      - /vol1/1000/视频/网盘/115:/115 # 存放STRM文件的根目录
+    q115-strm:
+        image: qicfan/115strm:latest
+        container_name: q115-strm
+        restart: unless-stopped
+        ports:
+            - "12333:12333"
+        volumes:
+            - /vol1/1000/docker/q115-strm/config:/app/config
+            - /vol2/1000/网盘:/media
+        environment:
+            - TZ=Asia/Shanghai
 
-    restart: unless-stopped
+networks:
+    default:
+        name: q115-strm
 ```
 
-#### Docker 配置解释
-- `-v /vol1/1000/docker/q115strm/data:/app/data`: 该目录用来存放程序运行的日志和数据，建议映射，后续重装可以直接恢复数据
-- `-v  /vol1/1000/docker/clouddrive2/shared/115:/vol1/1000/docker/clouddrive2/shared/115:shared`: CD2挂载115的的绝对路径，必须完整映射到容器中，如果使用WebDAV则不需要这个映射。
-- `-v /vol1/1000/视频/网盘/115:/115` 存放STRM文件的根目录，必须存在这个映射
-- `-p 12123:12123`: 映射12123端口，一个简易的web ui。
-- `--restart unless-stopped` 设置容器在退出时自动重启。
-- `-e "TZ=Asia/Shanghai"` 时区变量，可以根据所在地设置；会影响记录的任务执行时间，定时执行任务的时间
-- `-e "PROXY_HOST=http://192.168.1.1:10808"` 
+2. 运行以下命令：
 
-## 关键词解释：
-- 同步路径：115网盘中的目录，跟alist无关，请到115网盘app或者浏览器中查看实际的目录，多个目录用 / 分隔，比如：Media/电影/华语电影
-- AList根文件夹：Alist -> 管理 -> 存储 -> 115网盘 -> 编辑 -> 拉倒最下面找到根文件夹ID
-  - 如果是0，则该字段留空
-  - 如果不为0则输入该ID对应的文件夹路径，多个目录用 / 分隔，如：Media/电影
-- 115挂载路径：Alist -> 管理 -> 存储 -> 115网盘 -> 编辑 -> 挂载路径
-    > 挂载路径是什么就填什么，去掉开头和结尾的/(不去也行，程序已经做了处理)
-- 元数据选项：如果网盘中存放了字幕文件、封面、nfo文件等，可以通过选择的操作来讲元数据同步到strm跟路径的对应文件夹内
+```bash
+# 启动服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+## 目录映射说明
+
+| 容器内路径    | 宿主机路径                           | 说明                     |
+| ------------- | ------------------------------------ | ------------------------ |
+| `/app/config` | `/vol1/1000/docker/q115-strm/config` | 配置文、数据、日志目录   |
+| `/media`      | `/vol1/1000/网盘`                    | 存放 STRM 和元数据的目录 |
+
+## 环境变量
+
+| 变量名 | 默认值          | 说明     |
+| ------ | --------------- | -------- |
+| `TZ`   | `Asia/Shanghai` | 时区设置 |
+
+## 端口说明
+
+- **12333**: Web 服务端口
+
+## 版本标签
+
+- `latest` - 最新发布版本
+- `v1.0.0` - 具体版本号（对应 GitHub Release）
+
+## 首次使用
+
+1. 启动容器后访问: http://your-ip:12333
+2. 默认登录信息需要查看日志或配置文件
+3. 登录后进行 115 账号配置
+
+## 数据备份
+
+重要数据位于 `/vol1/1000/docker/q115-strm/config` 目录，请定期备份：
+
+```bash
+# 备份数据
+cp -r /vol1/1000/docker/q115-strm/config /vol1/1000/docker/q115-strm/config-backup-$(date +%Y%m%d)
+```
+
+## 故障排查
+
+### 查看日志
+
+```bash
+# 查看容器日志
+docker logs q115-strm
+
+# 查看应用日志
+docker exec q115-strm ls -la /app/config/logs/
+```
+
+### 重启服务
+
+```bash
+# 重启容器
+docker restart q115-strm
+
+# 或使用docker-compose
+docker-compose restart
+```
+
+### 更新镜像
+
+```bash
+# 停止并删除旧容器
+docker stop q115-strm && docker rm q115-strm
+
+# 拉取最新镜像
+docker pull qicfan/115strm:latest
+
+# 重新启动
+docker run -d \
+  --name q115-strm \
+  -p 12333:12333 \
+  -v $(pwd)/q115-strm/config:/app/config \
+  -v $(pwd)/q115-strm/data:/app/data \
+  -v $(pwd)/q115-strm/logs:/app/config/logs \
+  -e TZ=Asia/Shanghai \
+  --restart unless-stopped \
+  qicfan/115strm:latest
+```
