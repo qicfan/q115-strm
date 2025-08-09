@@ -157,3 +157,5 @@ docker run -d \
   --restart unless-stopped \
   qicfan/115strm:latest
 ```
+
+- 讨论电报群：[http://](https://t.me/q115_strm)
