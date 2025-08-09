@@ -20,7 +20,8 @@
 - [x] 115 开放平台接入
 - [x] STRM 生成
 - [x] 元数据下载
-- [x] 使用CookieCloud同步115网页Cookie（后续可以调用115 api） 
+- [x] 使用CookieCloud同步115网页Cookie（后续可以调用115 api）
+- [ ] 接入Telegram通知
 - [ ] 根据 STRM 文件秒传文件（将 STRM 里的内容发给其他人，其他人可以直接秒传给自己）
 - [ ] 接入资源库
 - [ ] emby 302（待定，优先级低）
@@ -163,5 +164,6 @@ docker run -d \
   --restart unless-stopped \
   qicfan/115strm:latest
 ```
+
 
 
