@@ -1,5 +1,5 @@
 ## 注意事项
-- 本项目已全新改版且转闭源，本仓库中的代码可以构建老版本(前端代码已补全），如果有需要可以自行构建
+- 本项目已全新改版且转闭源，本仓库中的代码可以构建老版本，如果有需要可以自行构建
 - 项目Release提供windows版本可执行文件，其他系统请使用docker部署
 - 讨论电报群：[http://t.me/q115_strm](https://t.me/q115_strm)
 
@@ -163,4 +163,5 @@ docker run -d \
   --restart unless-stopped \
   qicfan/115strm:latest
 ```
+
 
