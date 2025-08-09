@@ -22,6 +22,7 @@
 - [x] 元数据下载
 - [x] 使用CookieCloud同步115网页Cookie（后续可以调用115 api）
 - [ ] 接入Telegram通知
+- [ ] 实时监控并上传本地刮削产生的元数据文件（设置中有一个开关开启）
 - [ ] 接入资源库
 - [ ] emby 302（待定，优先级低）
 - [ ] 影片整理（待定， 优先级最低）
@@ -168,6 +169,7 @@ docker run -d \
   --restart unless-stopped \
   qicfan/115strm:latest
 ```
+
 
 
 
