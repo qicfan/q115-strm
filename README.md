@@ -20,7 +20,7 @@
 - 默认用户名 admin,密码 admin123
 
 ## 已知问题
-- infuse+emby无法播放，原因：infuse调用emby进行播放时，emby请求的UserAgent为空，实际播放的UserAgent未知，这时115对下载链接的校验无法通过（播放和请求的UserAgent必须相同），解决方法暂时没有，待后续仔细抓包看一下。
+- ~~infuse+emby无法播放，原因：infuse调用emby进行播放时，emby请求的UserAgent为空，实际播放的UserAgent未知，这时115对下载链接的校验无法通过（播放和请求的UserAgent必须相同），解决方法暂时没有，待后续仔细抓包看一下。~~
 
 ### 功能列表
 
@@ -181,6 +181,7 @@ docker run -d \
   --restart unless-stopped \
   qicfan/115strm:latest
 ```
+
 
 
 
