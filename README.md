@@ -1,4 +1,5 @@
 ## 注意事项
+- 项目改名为QMediaSync，仓库迁移到了：[qicfan/qmediasync](https://github.com/qicfan/qmediasync])，后续版本都将发布在新仓库
 - 本项目已全新改版且转闭源，本仓库中的代码可以构建老版本，如果有需要可以自行构建
 - 电报群：[http://t.me/q115_strm](https://t.me/q115_strm)
 - QQ群：1057459156
@@ -185,6 +186,7 @@ docker run -d \
   --restart unless-stopped \
   qicfan/115strm:latest
 ```
+
 
 
 
