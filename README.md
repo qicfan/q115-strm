@@ -181,6 +181,13 @@ docker run -d \
 ```
 
 
+<p align="center">
+  <img width="200" height="200" alt="支付宝打赏" src="https://github.com/user-attachments/assets/fc3519f2-f8d2-47b1-b7a4-5abf6d4e6e65" />
+  <img width="200" height="200" alt="微信打赏" src="https://github.com/user-attachments/assets/0c9c9f6c-e52c-49a3-8ade-c2443d169685" />
+</p>
+<p align="center">**如果觉得好用，就请作者喝杯咖啡**</p>
+
+
 
 
 
